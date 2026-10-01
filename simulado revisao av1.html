@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Revisão AV1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#02040a;
+  --surface:#070d1a;
+  --surface-2:#0b1426;
+  --surface-3:#111d36;
+  --line:rgba(96,165,250,.12);
+  --line-2:rgba(96,165,250,.24);
+  --green:#1e3a8a;
+  --green-2:#1d4ed8;
+  --accent:#60a5fa;
+  --accent-dim:rgba(96,165,250,.13);
+  --text:#e2e8f4;
+  --text-2:#b3c0d6;
+  --muted:#7a8aa6;
+  --ok:#3fb97c;
+  --ok-bg:rgba(63,185,124,.10);
+  --err:#e2575c;
+  --err-bg:rgba(226,87,92,.09);
+  --sans:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --r:10px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="dark"]{ color-scheme:dark; }
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 120px);background:var(--bg)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--mono)}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(2,4,10,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar-inner{max-width:880px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:8px}
+.counter{font-family:var(--mono);font-size:14px;color:var(--text-2);margin:0 auto 0 8px;white-space:nowrap}
+.counter b{color:var(--accent);font-weight:500}
+.counter .mode{color:var(--muted);font-size:12px;margin-left:8px}
+.tb-btn{background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13.5px;color:var(--text-2);cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s}
+.tb-btn:hover{border-color:var(--line-2);color:var(--text)}
+.tb-btn.primary{border-color:var(--green-2);background:var(--green);color:#eef4ff}
+.tb-btn.primary:hover{background:var(--green-2)}
+.tb-btn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
+.progress{max-width:880px;margin:0 auto;padding:0 20px 10px;display:flex;gap:2px}
+.seg{flex:1;min-width:0;height:5px;border-radius:2px;background:var(--surface-3);border:0;padding:0;cursor:pointer;position:relative}
+.seg.ok{background:var(--ok)}
+.seg.err{background:var(--err)}
+.seg.cur{box-shadow:0 0 0 1.5px var(--accent);background:var(--accent-dim)}
+.seg.cur.ok{background:var(--ok)}
+.seg.cur.err{background:var(--err)}
+.seg::after{content:"";position:absolute;inset:-8px 0}
+
+/* ---------- layout ---------- */
+main{max-width:880px;margin:0 auto;padding:32px 20px 80px}
+.view[hidden]{display:none}
+
+/* ---------- start ---------- */
+.start{min-height:calc(100vh - 160px);display:flex;flex-direction:column;justify-content:center;max-width:620px}
+.start .kicker{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.02em;margin:0 0 18px;display:flex;align-items:center;gap:10px}
+.start .kicker::before{content:"";width:22px;height:1px;background:var(--accent)}
+.start h1{font-weight:300;font-size:clamp(34px,6.4vw,56px);line-height:1.05;letter-spacing:-.02em;margin:0 0 20px}
+.start p{color:var(--text-2);margin:0 0 30px;max-width:52ch}
+.bank[hidden]{display:none}
+.bank{margin-top:22px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:13.5px}
+.bank-label{color:var(--muted)}
+.link{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;font-size:13.5px;text-decoration:underline;text-decoration-color:rgba(96,165,250,.35);text-underline-offset:3px}
+.link:hover{text-decoration-color:var(--accent)}
+.figure img{display:block;max-width:100%;height:auto;border-radius:6px}
+.start p.author{font-size:15px;color:var(--accent);margin:-6px 0 14px}
+.stats{display:flex;gap:32px;margin:0 0 36px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat .n{font-family:var(--mono);font-size:26px;color:var(--text);line-height:1.2}
+.stat .l{font-size:13px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{border:1px solid var(--line-2);background:transparent;color:var(--text);border-radius:var(--r);padding:12px 22px;font-size:15px;font-weight:500;cursor:pointer;transition:background .15s,border-color .15s}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--green);border-color:var(--green-2);color:#eef4ff}
+.btn.primary:hover{background:var(--green-2)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.keys{margin-top:34px;display:flex;flex-wrap:wrap;gap:18px;font-size:13px;color:var(--muted)}
+kbd{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--text-2);background:var(--surface)}
+
+/* ---------- question ---------- */
+.q-meta{display:flex;align-items:baseline;gap:14px;margin:0 0 18px;flex-wrap:wrap}
+.q-num{font-family:var(--mono);font-size:13px;color:var(--accent);border:1px solid var(--accent-dim);background:var(--accent-dim);border-radius:6px;padding:2px 8px}
+.q-tema{font-size:13.5px;color:var(--muted)}
+.q-case{font-size:17px;line-height:1.72;color:var(--text);max-width:70ch;margin:0 0 20px}
+.q-ask{font-size:17px;font-weight:500;color:#f0f5ff;max-width:70ch;margin:0 0 22px}
+.figure{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 22px;overflow-x:auto}
+.figure svg{display:block;min-width:540px;width:100%;height:auto;max-width:680px}
+.figure figcaption{font-size:12.5px;color:var(--muted);margin-top:8px}
+.g-line{stroke:var(--text-2);stroke-width:1.5;fill:none}
+.g-rel{stroke:var(--accent);stroke-width:1.4;fill:none}
+.g-sym{fill:var(--surface-2);stroke:var(--text);stroke-width:1.5}
+.g-idx{fill:none;stroke:var(--accent);stroke-width:1.3}
+.g-txt{fill:var(--text);font:500 12.5px var(--sans)}
+.g-sub{fill:var(--muted);font:400 11.5px var(--sans)}
+.g-leg{fill:var(--text-2);font:400 12px var(--sans)}
+
+.opts{display:flex;flex-direction:column;gap:10px;margin:0 0 26px}
+.opt{display:flex;gap:14px;align-items:flex-start;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;cursor:pointer;font-size:15.5px;line-height:1.55;color:var(--text);transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--green-2);background:var(--surface-2)}
+.opt:disabled{cursor:default}
+.opt .key{font-family:var(--mono);font-size:13px;flex:0 0 28px;height:28px;display:grid;place-items:center;border:1px solid var(--line-2);border-radius:7px;color:var(--text-2);margin-top:-1px}
+.opt.dim{opacity:.5}
+.opt.right{border-color:var(--ok);background:var(--ok-bg);opacity:1}
+.opt.right .key{border-color:var(--ok);background:var(--ok);color:#04130b}
+.opt.wrong{border-color:var(--err);background:var(--err-bg);opacity:1}
+.opt.wrong .key{border-color:var(--err);background:var(--err);color:#1a0405}
+
+.fb{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden;margin:0 0 28px}
+.fb-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);font-weight:500}
+.fb-head .dot{width:9px;height:9px;border-radius:50%}
+.fb.is-ok .fb-head{color:var(--ok)} .fb.is-ok .dot{background:var(--ok)}
+.fb.is-err .fb-head{color:var(--err)} .fb.is-err .dot{background:var(--err)}
+.fb-head .gab{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--text-2);font-weight:400}
+.fb-body{padding:6px 18px 16px}
+.fb-sec{padding:12px 0;border-bottom:1px solid var(--line)}
+.fb-sec:last-child{border-bottom:0}
+.fb-sec h3{font-size:13px;font-weight:500;color:var(--accent);margin:0 0 4px}
+.fb-sec p{margin:0;color:var(--text-2);font-size:15px;max-width:72ch}
+.fb-steps{margin:6px 0 0;padding:0;list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:7px}
+.fb-steps li{counter-increment:st;display:flex;gap:10px;font-size:14.5px;color:var(--text-2);line-height:1.5}
+.fb-steps li::before{content:counter(st,decimal-leading-zero);font-family:var(--mono);font-size:12px;color:var(--accent);flex:0 0 22px;padding-top:2px}
+.fb-alts{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.fb-alts li{display:flex;gap:10px;font-size:14.5px;color:var(--text-2);line-height:1.5}
+.fb-alts .k{font-family:var(--mono);color:var(--err);flex:0 0 18px}
+
+.nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nav .spacer{flex:1}
+.nav .hint{font-size:12.5px;color:var(--muted)}
+
+/* ---------- result ---------- */
+.result h2{font-weight:300;font-size:28px;margin:0 0 26px;letter-spacing:-.01em}
+.score{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;padding:28px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 0 28px}
+.pct{font-family:var(--mono);font-size:clamp(64px,14vw,104px);line-height:.9;font-weight:500;color:var(--accent);letter-spacing:-.04em}
+.pct small{font-size:.4em;color:var(--muted);margin-left:4px}
+.breakdown{display:flex;gap:28px;padding-bottom:6px}
+.breakdown .n{font-family:var(--mono);font-size:24px}
+.breakdown .l{font-size:13px;color:var(--muted)}
+.n.ok{color:var(--ok)} .n.err{color:var(--err)} .n.blank{color:var(--text-2)}
+.result .summary{color:var(--text-2);margin:0 0 26px;max-width:60ch}
+.topics{margin:34px 0 0;border-top:1px solid var(--line);padding-top:24px;max-width:720px}
+.topics h3{font-size:16px;font-weight:500;margin:0 0 6px}
+.topics-tip{color:var(--text-2);font-size:14.5px;margin:0 0 16px}
+.topics ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.topics li{display:grid;grid-template-columns:minmax(0,1fr) 120px 110px;align-items:center;gap:14px;font-size:14.5px}
+.topics .tn{color:var(--text)}
+.topics .tbar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}
+.topics .tbar i{display:block;height:100%;border-radius:3px}
+.topics li.good .tbar i{background:var(--ok)} .topics li.mid .tbar i{background:var(--accent)} .topics li.bad .tbar i{background:var(--err)}
+.topics .tv{font-family:var(--mono);font-size:12.5px;color:var(--text-2);text-align:right}
+.topics li.bad .tv{color:var(--err)}
+@media (max-width:640px){.topics li{grid-template-columns:minmax(0,1fr) 92px;row-gap:4px}.topics .tbar{grid-column:1/-1;grid-row:2}}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:5px;margin:30px 0 0;max-width:620px}
+
+/* ---------- map ---------- */
+.map{position:absolute;right:20px;top:calc(100% + 6px);width:min(420px,calc(100vw - 32px));max-height:min(70vh,560px);overflow-y:auto;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r);padding:14px;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.map[hidden]{display:none}
+.map-wrap{max-width:880px;margin:0 auto;position:relative}
+.filters{display:flex;gap:6px;margin:0 0 12px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 11px;font-size:12.5px;color:var(--text-2);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.cells{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}
+.cell{font-family:var(--mono);font-size:12px;height:32px;padding:0;border-radius:7px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--text-2);cursor:pointer}
+.cell.ok{border-color:rgba(63,185,124,.6);color:var(--ok);background:var(--ok-bg)}
+.cell.err{border-color:rgba(226,87,92,.6);color:var(--err);background:var(--err-bg)}
+.cell.cur{outline:1.5px solid var(--accent);outline-offset:1px}
+.map-empty{font-size:13px;color:var(--muted);padding:8px 2px}
+.map-legend{display:flex;gap:14px;margin-top:12px;font-size:12px;color:var(--muted)}
+.map-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(2,4,3,.72);display:grid;place-items:center;padding:20px}
+.modal[hidden]{display:none}
+.modal-box{width:min(420px,100%);background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:22px}
+.modal-box h3{margin:0 0 8px;font-size:17px;font-weight:500}
+.modal-box p{margin:0 0 20px;color:var(--text-2);font-size:15px}
+.modal-box .actions{justify-content:flex-end}
+
+@media (max-width:640px){
+  main{padding:24px 16px 64px}
+  .topbar-inner{padding:8px 12px;gap:6px;flex-wrap:wrap}
+  .progress{padding:0 12px 8px}
+  .tb-btn{padding:5px 9px;font-size:12.5px}
+  .counter{order:-1;flex-basis:100%;margin:0 0 4px 2px}
+  .q-case,.q-ask{font-size:16px}
+  .map{right:16px}
+  .cells{grid-template-columns:repeat(7,1fr)}
+  .stats{gap:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="topbar" id="topbar" hidden>
+  <div class="topbar-inner">
+    <button class="tb-btn" id="btnHome" type="button">Início</button>
+    <div class="counter" id="counter" aria-live="polite"></div>
+    <button class="tb-btn" id="btnMap" type="button" aria-expanded="false" aria-controls="map">Mapa</button>
+    <button class="tb-btn" id="btnReset" type="button">Reiniciar</button>
+    <button class="tb-btn primary" id="btnFinish" type="button">Finalizar</button>
+  </div>
+  <div class="progress" id="progress" aria-label="Progresso"></div>
+  <div class="map-wrap">
+    <div class="map" id="map" hidden role="dialog" aria-label="Mapa de questões">
+      <div class="filters" role="group" aria-label="Filtrar questões">
+        <button class="chip" data-f="all" aria-pressed="true" type="button">Todas</button>
+        <button class="chip" data-f="err" aria-pressed="false" type="button">Erradas</button>
+        <button class="chip" data-f="blank" aria-pressed="false" type="button">Em branco</button>
+      </div>
+      <div class="cells" id="cells"></div>
+      <div class="map-legend"><span><i style="background:var(--ok)"></i>Certa</span><span><i style="background:var(--err)"></i>Errada</span><span><i style="background:var(--surface-3);border:1px solid var(--line-2)"></i>Em branco</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="view start" id="vStart">
+    <p class="kicker" id="cArea"></p>
+    <h1 id="cTitulo"></h1>
+    <p class="author" id="cAutor"></p>
+    <p id="cDesc"></p>
+    <div class="stats">
+      <div class="stat"><div class="n" id="sTotal">70</div><div class="l">questões</div></div>
+      <div class="stat"><div class="n" id="sDone">0</div><div class="l">respondidas</div></div>
+      <div class="stat"><div class="n" id="sAlt">4</div><div class="l">alternativas cada</div></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btnStart" type="button">Iniciar</button>
+      <button class="btn" id="btnFresh" type="button" hidden>Começar do zero</button>
+    </div>
+    <div class="bank" hidden>
+      <span class="bank-label" id="bankLabel"></span>
+      <button class="link" id="btnLoad" type="button">Carregar questões (.json)</button>
+      <button class="link" id="btnModel" type="button">Baixar modelo</button>
+      <button class="link" id="btnDefault" type="button" hidden>Voltar ao banco padrão</button>
+      <input type="file" id="fileInput" accept=".json,application/json" hidden>
+    </div>
+    <div class="keys">
+      <span id="keysAns"><kbd>A</kbd> <kbd>B</kbd> <kbd>C</kbd> <kbd>D</kbd> responder</span>
+      <span><kbd>Enter</kbd> avançar</span>
+      <span><kbd>←</kbd> <kbd>→</kbd> navegar</span>
+    </div>
+  </section>
+
+  <section class="view" id="vQuiz" hidden></section>
+  <section class="view result" id="vResult" hidden></section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="mTitle" aria-describedby="mText">
+    <h3 id="mTitle"></h3>
+    <p id="mText"></p>
+    <div class="actions">
+      <button class="btn" id="mCancel" type="button">Cancelar</button>
+      <button class="btn primary" id="mOk" type="button">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIGURAÇÃO — edite estes textos para cada matéria
+   ===================================================================== */
+const CONFIG = {
+  area: "Faculdade Zarns",
+  titulo: "Revisão AV1",
+  autor: "",
+  descricao: "80 questões de revisão com gabarito comentado: farmacocinética, interações medicamentosas, efeitos adversos e conduta.",
+  embaralhar: false
+};
+
+/* =====================================================================
+   BANCO DE QUESTÕES PADRÃO
+   Formato de cada questão:
+   {
+     "assunto":   "Tema usado no relatório final",
+     "caso":      "Enunciado / caso clínico",
+     "pergunta":  "Pergunta final",
+     "opcoes":    ["alt A", "alt B", "alt C", "alt D"],   // 2 a 5 alternativas
+     "correta":   "C",                                    // letra (ou índice 0-4)
+     "pista":     "Pista principal do caso",              // opcional
+     "conceito":  "Conceito testado",                     // opcional
+     "explicacao":"Explicação livre",                     // opcional
+     "erros":     { "A": "erro de A", "B": "...", "D": "..." },  // opcional
+     "figura":    "<svg>...</svg>",                       // opcional (SVG/HTML)
+     "imagem":    "https://... ou data:image/...",        // opcional
+     "legenda":   "Legenda da figura"                     // opcional
+   }
+   Também é possível carregar um arquivo .json pelo botão da tela inicial,
+   sem editar este código: { "config": {...}, "questoes": [ ... ] }
+   ===================================================================== */
+const BANCO_PADRAO = [
+ {
+  "assunto": "Levotiroxina – absorção",
+  "caso": "Paciente masculino, 35 anos, com diagnóstico de hipotireoidismo primário há 2 anos, em uso de Levotiroxina 75 µg/dia. Ele relata que toma o medicamento todas as manhãs, logo ao acordar, acompanhado de um copo de suco de laranja e um suplemento de carbonato de cálcio 600 mg, prescrito para prevenção de osteoporose. Apesar de referir boa adesão à terapia, queixa-se de cansaço persistente, ganho de peso de 4 kg nos últimos 6 meses e constipação intestinal. Exames laboratoriais recentes mostram TSH = 7,8 mUI/L (VR: 0,4–4,5) e T4 livre = 0,9 ng/dL (VR: 0,8–1,8).",
+  "pergunta": "Considerando a farmacocinética da Levotiroxina e os fatores que alteram sua absorção gastrointestinal, assinale a alternativa correta.",
+  "opcoes": [
+   "O suco de laranja aumenta a acidez gástrica e degrada a Levotiroxina, reduzindo sua absorção e justificando o TSH elevado.",
+   "O carbonato de cálcio forma complexos insolúveis com a Levotiroxina no trato gastrointestinal, reduzindo sua biodisponibilidade; a orientação é administrar a Levotiroxina em jejum, com intervalo mínimo de 4 horas do cálcio.",
+   "A Levotiroxina não sofre interferência de alimentos ou suplementos, pois é absorvida por transporte ativo saturável no íleo, e o TSH elevado indica resistência periférica ao hormônio.",
+   "O cálcio induz o metabolismo hepático da Levotiroxina via CYP3A4, aumentando seu clearance e reduzindo os níveis séricos do hormônio ativo."
+  ],
+  "correta": "B",
+  "explicacao": "O carbonato de cálcio forma complexos insolúveis com a Levotiroxina no trato gastrointestinal, reduzindo sua absorção. A orientação é administrar a Levotiroxina em jejum, 30– 60 minutos antes do café da manhã, com intervalo mínimo de 4 horas do cálcio, ferro, antiácidos e outros medicamentos.",
+  "erros": {
+   "A": "Incorreta porque o suco de laranja não degrada a Levotiroxina.",
+   "C": "Incorreta porque a Levotiroxina sofre interferência de alimentos e suplementos.",
+   "D": "Incorreta porque o cálcio não induz metabolismo hepático da Levotiroxina."
+  }
+ },
+ {
+  "assunto": "Varfarina – interações",
+  "caso": "Paciente feminina, 48 anos, com fibrilação atrial permanente, em uso de Varfarina 5 mg/dia há 3 anos, com INR estável entre 2,0 e 3,0. Ela comparece ao pronto-socorro com queixa de corrimento vaginal esbranquiçado e prurido, sendo diagnosticada com candidíase vaginal. O médico prescreve Fluconazol 150 mg/dia por 7 dias. Cinco dias após o início do antifúngico, a paciente retorna apresentando epistaxe espontânea, gengivorragia e múltiplas equimoses em membros inferiores. O INR aferido é de 6,2.",
+  "pergunta": "Considerando o mecanismo de interação medicamentosa entre Fluconazol e Varfarina, assinale a alternativa correta.",
+  "opcoes": [
+   "O Fluconazol é um indutor da CYP2C9, aumentando o metabolismo da Varfarina, elevando o INR e o risco de sangramento.",
+   "O Fluconazol é um inibidor da CYP2C9, reduzindo o metabolismo da Varfarina, aumentando seus níveis plasmáticos e o risco de sangramento; a conduta é suspender o Fluconazol, administrar vitamina K e monitorar o INR.",
+   "A interação ocorre por competição pela glicoproteína-P, aumentando a absorção intestinal da Varfarina e elevando seus níveis séricos.",
+   "O Fluconazol aumenta a ligação da Varfarina à albumina, elevando a fração livre do fármaco e potencializando seu efeito anticoagulante."
+  ],
+  "correta": "B",
+  "explicacao": "O Fluconazol é um inibidor potente da CYP2C9 (e CYP3A4), reduzindo o metabolismo da Varfarina, aumentando seus níveis plasmáticos e o risco de sangramento (INR elevado). A conduta é suspender o Fluconazol, administrar vitamina K e monitorar o INR.",
+  "erros": {
+   "A": "Incorreta porque o Fluconazol é inibidor, não indutor.",
+   "C": "Incorreta porque a interação não é por glicoproteína-P.",
+   "D": "Incorreta porque o Fluconazol não aumenta significativamente a fração livre da Varfarina."
+  }
+ },
+ {
+  "assunto": "DM2 e DRC – iSGLT2",
+  "caso": "Paciente masculino, 60 anos, com Diabetes Mellitus tipo 2 há 12 anos, hipertensão arterial sistêmica e doença renal crônica estágio 3b. Seus exames mais recentes mostram HbA1c = 8,8%, creatinina = 2,1 mg/dL, TFG estimada = 38 mL/min/1,73m² e relação albumina/creatinina = 350 mg/g. Ele está em uso de Metformina 1.500 mg/dia e Glibenclamida 10 mg/dia, além de Losartana 50 mg/dia. Ao exame físico, PA = 140/88 mmHg, IMC = 30 kg/m², sem edema.",
+  "pergunta": "Considerando a necessidade de proteção renal, controle glicêmico e segurança medicamentosa nesse estágio de função renal, assinale a alternativa correta.",
+  "opcoes": [
+   "A Glibenclamida é segura em pacientes com TFG &lt; 45 mL/min/1,73m² e deve ser mantida na dose atual para controle glicêmico.",
+   "A adição de Dapagliflozina é contraindicada com TFG &lt; 45 mL/min/1,73m², pois não há benefício renal nessa faixa de função.",
+   "A adição de um iSGLT2 (ex.: Dapagliflozina) é recomendada para reduzir a progressão da doença renal e a albuminúria, mesmo com TFG entre 25–45 mL/min/1,73m²; a Metformina deve ser ajustada ou suspensa conforme a TFG, e a Glibenclamida deve ser substituída por fármaco com menor risco de hipoglicemia.",
+   "A insulina é a única opção terapêutica segura nesse estágio de função renal, devendo-se suspender todos os antidiabéticos orais."
+  ],
+  "correta": "C",
+  "explicacao": "Os iSGLT2 (Dapagliflozina, Empagliflozina) têm benefício comprovado na redução da progressão da DRC e da albuminúria, mesmo com TFG entre 25–45 mL/min/1,73m². A Metformina deve ser ajustada ou suspensa com TFG &lt; 30–45. A Glibenclamida não é segura nessa TFG (risco de hipoglicemia). A insulina não é a única opção.",
+  "erros": {}
+ },
+ {
+  "assunto": "Antipsicóticos – monitorização metabólica",
+  "caso": "Paciente masculino, 28 anos, com diagnóstico de primeiro episódio psicótico, apresenta delírios persecutórios, alucinações auditivas de comando e isolamento social grave com duração de aproximadamente três semanas. Ele é obeso (IMC = 32 kg/m²), faz uso crônico de cannabis e não possui comorbidades clínicas relevantes. A equipe psiquiátrica decide iniciar Olanzapina 10 mg/dia. Antes da prescrição, o médico residente corretamente solicita uma bateria de exames basais, incluindo glicemia de jejum, perfil lipídico, peso, circunferência abdominal e prolactina.",
+  "pergunta": "Considerando o perfil de efeitos adversos dos antipsicóticos atípicos e a importância da monitorização metabólica, assinale a alternativa correta.",
+  "opcoes": [
+   "A monitorização metabólica é desnecessária em pacientes jovens sem comorbidades, pois o risco de síndrome metabólica é insignificante nessa faixa etária.",
+   "A Olanzapina tem baixo risco de ganho de peso e síndrome metabólica, dispensando monitorização laboratorial periódica.",
+   "A monitorização basal é fundamental, pois antipsicóticos atípicos como Olanzapina e Clozapina estão associados a ganho de peso, dislipidemia e hiperglicemia; devem ser monitorados peso, IMC, circunferência abdominal, glicemia, lipídios e prolactina em intervalos regulares.",
+   "A prolactina só deve ser dosada em pacientes que apresentam sintomas clínicos de hiperprolactinemia, como galactorreia ou amenorreia, não sendo necessária a dosagem basal."
+  ],
+  "correta": "C",
+  "explicacao": "Antipsicóticos atípicos (Olanzapina, Clozapina, Quetiapina) estão associados a ganho de peso, dislipidemia e hiperglicemia. A monitorização basal e periódica de peso, IMC, circunferência abdominal, glicemia, lipídios e prolactina é recomendada.",
+  "erros": {
+   "A": "Incorreta porque a monitorização é necessária mesmo em jovens.",
+   "B": "Incorreta porque a Olanzapina tem alto risco metabólico.",
+   "D": "Incorreta porque a prolactina deve ser dosada basalmente, especialmente com Risperidona e Haloperidol."
+  }
+ },
+ {
+  "assunto": "Anticonvulsivantes – teratogenia",
+  "caso": "Paciente feminina, 26 anos, com diagnóstico de epilepsia focal há 4 anos, em uso de Carbamazepina 600 mg/dia, com bom controle das crises. Ela comparece à consulta de neurologia acompanhada do parceiro, pois estão planejando uma gestação nos próximos meses. A paciente está preocupada com os riscos da medicação para o bebê e questiona se deve continuar o tratamento durante a gravidez. Ela nega crises nos últimos 2 anos e não faz uso de ácido fólico atualmente.",
+  "pergunta": "Considerando os efeitos teratogênicos dos anticonvulsivantes e as recomendações para mulheres em idade fértil, assinale a alternativa correta.",
+  "opcoes": [
+   "A Carbamazepina é a droga de primeira escolha na gestação, pois não apresenta risco teratogênico significativo e pode ser mantida sem ajustes.",
+   "A Carbamazepina está associada a risco aumentado de defeitos do tubo neural e deve ser substituída por Lamotrigina ou Levetiracetam, com suplementação de ácido fólico 5 mg/dia antes da concepção e durante o primeiro trimestre.",
+   "A paciente deve suspender toda medicação anticonvulsivante antes da concepção, pois o risco de malformações fetais supera o benefício do controle das crises.",
+   "O Ácido Valproico é a alternativa mais segura para substituição da Carbamazepina, pois apresenta menor risco teratogênico e melhor controle de crises focais."
+  ],
+  "correta": "B",
+  "explicacao": "A Carbamazepina está associada a risco aumentado de defeitos do tubo neural e deve ser substituída por Lamotrigina ou Levetiracetam, com ácido fólico 5 mg/dia.",
+  "erros": {
+   "A": "Incorreta porque a Carbamazepina não é a primeira escolha na gestação.",
+   "C": "Incorreta porque a suspensão da medicação pode precipitar crises.",
+   "D": "Incorreta porque o Ácido Valproico tem risco teratogênico ainda maior."
+  }
+ },
+ {
+  "assunto": "Anti-hipertensivos – edema por anlodipino",
+  "caso": "Paciente masculino, 58 anos, hipertenso há 8 anos, em uso de Anlodipino 10 mg/dia. Ele comparece à consulta de rotina queixando-se de edema bilateral de membros inferiores, que piora ao final do dia e melhora com a elevação das pernas. Nega dispneia, ortopneia, ganho de peso recente ou redução do volume urinário. Ao exame físico, apresenta edema depressível grau 2/4 em tornozelos e terço distal das pernas, PA = 132/84 mmHg, FC = 76 bpm, ausculta cardíaca e pulmonar sem alterações.",
+  "pergunta": "Considerando o mecanismo fisiopatológico do edema induzido por bloqueadores de canal de cálcio dihidropiridínicos, assinale a alternativa correta.",
+  "opcoes": [
+   "O edema é causado por insuficiência cardíaca descompensada induzida pelo Anlodipino, sendo necessária a suspensão imediata do fármaco e introdução de diurético de alça.",
+   "O edema é um efeito adverso comum dos dihidropiridínicos, decorrente da vasodilatação arteriolar preferencial e aumento da pressão capilar; pode ser manejado com redução da dose, associação de IECA/BRA ou troca por outra classe anti-hipertensiva.",
+   "O edema indica toxicidade renal induzida pelo Anlodipino, sendo obrigatória a suspensão do fármaco e investigação com exames de função renal.",
+   "O edema é mediado por retenção de sódio e água secundária ao hiperaldosteronismo induzido pelo Anlodipino, devendo ser tratado com Espironolactona."
+  ],
+  "correta": "B",
+  "explicacao": "O edema é efeito adverso comum dos dihidropiridínicos (Anlodipino, Nifedipino) por vasodilatação arteriolar preferencial e aumento da pressão capilar. Pode ser manejado com redução da dose, associação de IECA/BRA (que reduz o edema) ou troca por outra classe.",
+  "erros": {
+   "A": "Incorreta porque o Anlodipino não causa IC.",
+   "C": "Incorreta porque o edema não indica toxicidade renal.",
+   "D": "Incorreta porque o edema não é por retenção de sódio."
+  }
+ },
+ {
+  "assunto": "Estatinas – miotoxicidade",
+  "caso": "Paciente feminina, 62 anos, com dislipidemia mista, em uso de Sinvastatina 40 mg/dia à noite. Ela inicia tratamento com Genfibrozila 600 mg 12/12h para hipertrigliceridemia grave, prescrito por outro médico. Após 2 semanas da associação, a paciente comparece ao pronto-socorro com queixa de mialgia intensa e difusa, principalmente em coxas e ombros, além de fraqueza muscular que dificulta atividades como pentear o cabelo e levantar-se da cadeira. Exames laboratoriais mostram CK = 4.500 U/L e creatinina = 1,3 mg/dL.",
+  "pergunta": "Considerando a farmacocinética das estatinas e o risco de miotoxicidade associado à interação com fibratos, assinale a alternativa correta.",
+  "opcoes": [
+   "A associação entre Sinvastatina e Genfibrozila é segura, e a mialgia é um efeito esperado e autolimitado da Sinvastatina, não requerendo suspensão dos fármacos.",
+   "A Genfibrozila inibe a CYP3A4 e a glucuronidação, aumentando os níveis plasmáticos de Sinvastatina e o risco de rabdomiólise; a conduta é suspender ambas as medicações, monitorar CK e função renal, e posteriormente reintroduzir apenas uma estatina em dose ajustada.",
+   "A Genfibrozila aumenta a excreção renal da Sinvastatina, reduzindo sua eficácia terapêutica e causando mialgia por depleção de coenzima Q10.",
+   "A mialgia é sinal de neuropatia periférica induzida pela estatina, sendo necessário acrescentar vitamina B12 ao esquema terapêutico e manter as doses atuais."
+  ],
+  "correta": "B",
+  "explicacao": "A Genfibrozila inibe a CYP3A4 e a glucuronidação, aumentando os níveis de Sinvastatina e o risco de rabdomiólise. A conduta é suspender ambas, monitorar CK e função renal.",
+  "erros": {
+   "A": "Incorreta porque a associação não é segura.",
+   "C": "Incorreta porque a Genfibrozila não aumenta a excreção renal da Sinvastatina.",
+   "D": "Incorreta porque a mialgia é sinal de miotoxicidade, não neuropatia."
+  }
+ },
+ {
+  "assunto": "IC-FEr – hipercalemia",
+  "caso": "Paciente masculino, 70 anos, com insuficiência cardíaca com fração de ejeção reduzida (IC-FEr), em uso de Sacubitril/Valsartan 49/51 mg 12/12h, Bisoprolol 5 mg/dia, Espironolactona 25 mg/dia e Dapagliflozina 10 mg/dia. Ele comparece à consulta de rotina assintomático do ponto de vista cardiovascular, mas exames laboratoriais recentes mostram potássio sérico de 5,8 mEq/L, creatinina de 1,6 mg/dL e TFG estimada de 38 mL/min/1,73m². A pressão arterial é de 118/72 mmHg e a frequência cardíaca de 68 bpm.",
+  "pergunta": "Considerando o manejo da hipercalemia e da disfunção renal em pacientes com IC-FEr em uso de terapia quádrupla, assinale a alternativa correta.",
+  "opcoes": [
+   "A Espironolactona deve ser mantida na dose atual, pois o benefício de mortalidade comprovado supera o risco de hipercalemia, e o potássio de 5,8 mEq/L é aceitável nesse contexto.",
+   "A Espironolactona deve ser suspensa ou reduzida devido à hipercalemia e disfunção renal; deve-se reavaliar potássio e função renal em 1–2 semanas e considerar reintrodução gradual após correção.",
+   "A Dapagliflozina deve ser suspensa por ser a principal responsável pela hipercalemia e pela piora da função renal.",
+   "O Sacubitril/Valsartan deve ser aumentado para corrigir a hipercalemia por meio do aumento da natriurese e da melhora da função renal."
+  ],
+  "correta": "B",
+  "explicacao": "A Espironolactona deve ser suspensa ou reduzida com K &gt; 5,5 mEq/L e/ou TFG &lt; 30 mL/min/1,73m² devido ao risco de hipercalemia grave.",
+  "erros": {
+   "A": "Incorreta porque a hipercalemia é risco iminente.",
+   "C": "Incorreta porque a Dapagliflozina não causa hipercalemia (pode até reduzir).",
+   "D": "Incorreta porque o Sacubitril/Valsartan não corrige hipercalemia."
+  }
+ },
+ {
+  "assunto": "Síndrome serotoninérgica",
+  "caso": "Paciente feminina, 30 anos, com diagnóstico de transtorno depressivo maior, em uso de Sertralina 100 mg/dia há 6 meses, com boa resposta. Ela apresenta quadro de lombalgia aguda e, por conta própria, inicia Tramadol 50 mg 8/8h para controle da dor. Após 2 dias, comparece ao pronto-socorro com agitação psicomotora, tremores finos, sudorese profusa, hiperreflexia generalizada e clônus em tornozelos. Ao exame físico, apresenta taquicardia (FC = 120 bpm), hipertensão (PA = 160/95 mmHg), temperatura axilar de 38,2°C e pupilas midriáticas.",
+  "pergunta": "Considerando os mecanismos de interação medicamentosa no sistema nervoso central e as síndromes clínicas decorrentes do excesso de neurotransmissores, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro é compatível com Síndrome Neuroléptica Maligna, caracterizada por rigidez muscular em cano de chumbo, hipertermia e alteração do nível de consciência, sendo indicada a administração de Bromocriptina e Dantrolene.",
+   "A associação entre Sertralina (ISRS) e Tramadol (que também inibe a recaptação de serotonina) pode precipitar Síndrome Serotoninérgica; a conduta inicial inclui suspensão dos agentes causadores, administração de benzodiazepínicos para controle da agitação e da hiperatividade neuromuscular, e suporte clínico.",
+   "O uso concomitante de Sertralina e Tramadol é seguro na maioria dos pacientes, sendo o quadro atual mais sugestivo de uma crise de pânico exacerbada pelo estresse da dor lombar, o que requer ansiolíticos e antieméticos.",
+   "A hipertermia e a taquicardia observadas sugerem uma crise tireotóxica induzida pela interação medicamentosa, sendo necessário tratamento com Propiltiouracil, Betabloqueador e Iodo."
+  ],
+  "correta": "B",
+  "explicacao": "A associação Sertralina (ISRS) + Tramadol (que também inibe a recaptação de serotonina) pode precipitar Síndrome Serotoninérgica. A conduta é suspender os agentes, administrar benzodiazepínicos e suporte.",
+  "erros": {
+   "A": "Incorreta porque o quadro é serotoninérgico, não neuroléptico.",
+   "C": "Incorreta porque o Tramadol tem ação serotoninérgica.",
+   "D": "Incorreta porque o quadro é típico de síndrome serotoninérgica."
+  }
+ },
+ {
+  "assunto": "Antidepressivos – virada maníaca",
+  "caso": "Paciente masculino, 35 anos, com diagnóstico prévio de transtorno depressivo maior, em uso de Venlafaxina 150 mg/dia há 3 semanas. Ele comparece ao consultório psiquiátrico acompanhado da esposa, que relata mudança drástica de comportamento nos últimos 5 dias: o paciente está dormindo apenas 2 horas por noite sem sentir cansaço, fala de forma acelerada e pressionada, fez compras excessivas com o cartão de crédito (acumulando dívidas de mais de R$ 20.000,00) e apresenta ideias de grandeza, acreditando ter um talento especial para salvar a economia do país. Ele nega histórico prévio de episódios semelhantes.",
+  "pergunta": "Considerando os mecanismos de ação dos antidepressivos e o risco de virada maníaca em pacientes com transtorno bipolar não diagnosticado, assinale a alternativa correta.",
+  "opcoes": [
+   "A conduta é aumentar a dose de Venlafaxina para 225 mg/dia, pois a resposta parcial ao tratamento indica que a dose atual é insuficiente para controlar a depressão.",
+   "Trata-se de virada maníaca induzida por antidepressivo; a conduta é suspender a Venlafaxina e iniciar estabilizador de humor (Lítio, Valproato) ou antipsicótico atípico (Olanzapina, Quetiapina) para controle da mania aguda.",
+   "A conduta é associar um benzodiazepínico (Clonazepam) para controle da insônia e da agitação, mantendo a Venlafaxina na dose atual para não interromper o tratamento antidepressivo.",
+   "A euforia e a hiperatividade são efeitos esperados e indicam melhora do quadro depressivo, não requerendo intervenção farmacológica."
+  ],
+  "correta": "B",
+  "explicacao": "Trata-se de virada maníaca induzida por antidepressivo (Venlafaxina). A conduta é suspender a Venlafaxina e iniciar estabilizador de humor (Lítio, Valproato) ou antipsicótico atípico.",
+  "erros": {
+   "A": "Incorreta porque aumentar a dose pioraria a mania.",
+   "C": "Incorreta porque manter a Venlafaxina perpetua a mania.",
+   "D": "Incorreta porque a euforia não é melhora da depressão, mas virada maníaca."
+  }
+ },
+ {
+  "assunto": "Benzodiazepínicos – idosos",
+  "caso": "Paciente feminina, 78 anos, viúva, mora sozinha e é trazida pela filha à consulta de geriatria. A filha relata que a paciente está \"muito esquecida\" nos últimos meses, repetindo as mesmas perguntas várias vezes ao dia. Além disso, tem apresentado episódios de confusão mental ao final do dia (\"sunsetting\") e sonolência excessiva durante o dia. A paciente faz uso de Diazepam 10 mg/dia para \"dormir melhor\" e \"controlar o nervosismo\", prescrito há mais de 15 anos por um médico já falecido. Ao exame físico, apresenta-se sonolenta, com discreta ataxia na marcha e hiporreflexia generalizada. A filha menciona que a paciente sofreu duas quedas da própria altura no último mês, sem fraturas.",
+  "pergunta": "Considerando os efeitos adversos dos benzodiazepínicos em idosos e as recomendações dos Critérios de Beers, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro clínico é compatível com Doença de Alzheimer em estágio inicial, sendo a conduta correta a manutenção do Diazepam e o início de um inibidor da colinesterase, como a Donepezila.",
+   "Os benzodiazepínicos de meia-vida longa como o Diazepam são potencialmente inapropriados em idosos (Critérios de Beers) devido ao risco de sedação, quedas, fraturas e prejuízo cognitivo; a conduta é desmame gradual (redução de 10–25% da dose a cada 2–4 semanas) e introdução de estratégias não farmacológicas.",
+   "O Flumazenil deve ser prescrito cronicamente para reverter os efeitos cognitivos e motores do Diazepam, permitindo a manutenção do benzodiazepínico.",
+   "O Diazepam é seguro em idosos quando utilizado em doses baixas, e a sonolência e a ataxia são efeitos esperados que não requerem intervenção."
+  ],
+  "correta": "B",
+  "explicacao": "Benzodiazepínicos de meia-vida longa (Diazepam) são potencialmente inapropriados em idosos (Critérios de Beers) devido ao risco de sedação, quedas, fraturas e prejuízo cognitivo. A conduta é desmame gradual e estratégias não farmacológicas.",
+  "erros": {
+   "A": "Incorreta porque o quadro é induzido por benzodiazepínico.",
+   "C": "Incorreta porque o Flumazenil não deve ser usado cronicamente.",
+   "D": "Incorreta porque o Diazepam não é seguro em idosos."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – efeitos extrapiramidais",
+  "caso": "Paciente masculino, 22 anos, com diagnóstico de esquizofrenia (primeiro episódio psicótico), inicia tratamento com Haloperidol 5 mg/dia. Após 24 horas da primeira dose, o paciente é trazido ao pronto-socorro com quadro de espasmo muscular intenso e doloroso no pescoço, com desvio da cabeça para o lado direito (torcicolo), além de trismo (dificuldade para abrir a boca) e desvio dos olhos para cima (crise oculógira). O paciente está consciente, orientado, sem febre ou alteração dos sinais vitais.",
+  "pergunta": "Considerando os mecanismos fisiopatológicos dos efeitos extrapiramidais induzidos por antipsicóticos, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro é compatível com Acatisia, caracterizada por inquietação motora intensa e necessidade de movimento, sendo a conduta recomendada a administração de Propranolol e a redução da dose do Haloperidol.",
+   "O paciente apresenta Distonia Aguda, uma reação extrapiramidal que ocorre nas primeiras horas a dias após o início do antipsicótico, causada pelo bloqueio excessivo dos receptores D2 no estriado, sendo a conduta de urgência a administração de anticolinérgicos (Biperideno) por via intramuscular.",
+   "O quadro é compatível com Síndrome Neuroléptica Maligna, uma emergência psiquiátrica que requer a suspensão imediata do antipsicótico e a administração de Dantrolene e Bromocriptina.",
+   "A Distonia Aguda é uma reação esperada e autolimitada, que não requer intervenção farmacológica, devendo-se apenas orientar o paciente a manter repouso e aguardar a melhora espontânea."
+  ],
+  "correta": "B",
+  "explicacao": "Distonia Aguda é uma reação extrapiramidal que ocorre nas primeiras horas a dias após o início do antipsicótico, por bloqueio D2 no estriado. A conduta de urgência é Biperideno IM.",
+  "erros": {
+   "A": "Incorreta porque Acatisia é inquietação, não espasmo.",
+   "C": "Incorreta porque SNM cursa com febre, rigidez e alteração de consciência.",
+   "D": "Incorreta porque a distonia aguda requer tratamento."
+  }
+ },
+ {
+  "assunto": "IC-FEr – titulação",
+  "caso": "Paciente feminina, 65 anos, com insuficiência cardíaca com fração de ejeção reduzida (IC-FEr) há 5 anos, em uso de Sacubitril/Valsartan 24/26 mg 12/12h, Bisoprolol 2,5 mg/dia, Espironolactona 25 mg/dia e Dapagliflozina 10 mg/dia. Ela comparece à consulta de rotina relatando cansaço aos moderados esforços e edema de tornozelos ao final do dia. Exames laboratoriais mostram potássio = 4,2 mEq/L, creatinina = 1,1 mg/dL, TFG = 60 mL/min/1,73m². Ao exame físico, PA = 118/72 mmHg, FC = 70 bpm, turgência jugular discreta.",
+  "pergunta": "Considerando a farmacodinâmica dos agentes que compõem a terapia quádrupla para IC-FEr e os mecanismos de titulação de dose, assinale a alternativa correta.",
+  "opcoes": [
+   "A dose de Sacubitril/Valsartan deve ser titulada para a dose-alvo (97/103 mg 12/12h), com monitorização de PA, função renal e potássio, pois a dose atual é a inicial e a titulação é recomendada pelas diretrizes.",
+   "A Dapagliflozina deve ser suspensa, uma vez que a tontura postural e o edema de membros inferiores são efeitos adversos decorrentes da depleção de volume induzida por essa classe.",
+   "A Espironolactona deve ser suspensa imediatamente devido ao risco de hipercalemia, mesmo com potássio sérico de 4,2 mEq/L.",
+   "O Bisoprolol deve ser substituído por Carvedilol, pois o Carvedilol tem maior benefício comprovado na redução de mortalidade na IC-FEr."
+  ],
+  "correta": "A",
+  "explicacao": "A dose de Sacubitril/Valsartan deve ser titulada para a dose-alvo (97/103 mg 12/12h), com monitorização de PA, função renal e potássio.",
+  "erros": {
+   "B": "Incorreta porque a Dapagliflozina não causa hipotensão significativa.",
+   "C": "Incorreta porque a Espironolactona pode ser mantida com K = 4,2.",
+   "D": "Incorreta porque o Bisoprolol é betabloqueador de escolha."
+  }
+ },
+ {
+  "assunto": "Metformina – contraste iodado",
+  "caso": "Paciente masculino, 68 anos, com Diabetes Mellitus tipo 2 há 10 anos, em uso de Metformina 2.000 mg/dia. Ele apresenta TFG estimada de 45 mL/min/1,73m² e creatinina de 1,5 mg/dL. Será submetido a angiotomografia computadorizada com contraste iodado para investigação de doença arterial coronariana. A equipe médica, ciente do risco de interação, suspendeu a Metformina 48 horas antes do exame e planeja mantê-la suspensa por 48 horas após o procedimento, com reavaliação da função renal antes de reiniciar.",
+  "pergunta": "Considerando os mecanismos de interação medicamentosa, a farmacocinética da Metformina e os riscos associados ao uso concomitante com contraste iodado, assinale a alternativa correta.",
+  "opcoes": [
+   "A suspensão da Metformina antes do exame com contraste é uma precaução desnecessária, uma vez que o paciente tem função renal apenas moderadamente reduzida e o risco de acidose lática é mínimo.",
+   "O principal risco que se pretende evitar com a suspensão da Metformina é a acidose lática, uma complicação rara, mas grave, que pode ser precipitada pela injúria renal aguda induzida pelo contraste, reduzindo a excreção renal do fármaco e levando ao seu acúmulo plasmático.",
+   "A interação entre Metformina e contraste iodado ocorre por competição pelos mesmos transportadores renais de secreção tubular, aumentando a excreção da Metformina e reduzindo sua eficácia terapêutica.",
+   "A suspensão da Metformina deve ser mantida por pelo menos 7 dias após o procedimento, independentemente da função renal, para garantir a eliminação completa do fármaco do organismo."
+  ],
+  "correta": "B",
+  "explicacao": "A Metformina deve ser suspensa 48h antes e 48h após o contraste iodado, com reavaliação da função renal antes de reiniciar, devido ao risco de acidose lática.",
+  "erros": {
+   "A": "Incorreta porque há risco de nefrotoxicidade.",
+   "C": "Incorreta porque a suspensão de 7 dias é excessiva.",
+   "D": "Incorreta porque o contraste não aumenta a excreção da Metformina."
+  }
+ },
+ {
+  "assunto": "Antidiabéticos – GLP-1",
+  "caso": "Paciente feminina, 50 anos, com Diabetes Mellitus tipo 2 há 8 anos, obesidade grau II (IMC = 36 kg/m²) e esteatose hepática não alcoólica diagnosticada por ultrassonografia. Ela está em uso de Metformina 2.000 mg/dia, mas apresenta HbA1c = 9,0% (meta &lt; 7,0%). A paciente queixa-se de cansaço, falta de disposição e está muito insatisfeita com seu peso, relatando dificuldade para emagrecer mesmo com dieta e exercícios. Ao exame físico, PA = 132/82 mmHg, FC = 78 bpm.",
+  "pergunta": "Considerando os mecanismos de ação das diferentes classes de fármacos antidiabéticos e o impacto sobre o peso corporal e o fígado, assinale a alternativa correta.",
+  "opcoes": [
+   "A adição de Pioglitazona ao esquema seria a melhor opção, pois aumenta a sensibilidade à insulina e promove perda de peso significativa em pacientes com esteatose hepática.",
+   "A adição de Semaglutida (agonista do receptor GLP-1) é a melhor opção para esta paciente, pois promove potente redução da HbA1c, perda de peso significativa (através do retardo do esvaziamento gástrico e aumento da saciedade) e tem benefício cardiovascular comprovado, além de melhorar a esteatose hepática.",
+   "A adição de Glimepirida 4 mg/dia é a melhor opção, pois não causa hipoglicemia e promove perda de peso modesta.",
+   "A insulina NPH é a única opção para essa paciente, pois não interfere no peso corporal e não tem efeitos hepáticos."
+  ],
+  "correta": "B",
+  "explicacao": "A Semaglutida (GLP-1) promove redução de HbA1c, perda de peso significativa e benefício cardiovascular.",
+  "erros": {
+   "A": "Incorreta porque a Pioglitazona causa ganho de peso.",
+   "C": "Incorreta porque a Glimepirida causa hipoglicemia e ganho de peso.",
+   "D": "Incorreta porque a insulina não é a única opção."
+  }
+ },
+ {
+  "assunto": "iSGLT2 – perioperatório",
+  "caso": "Paciente masculino, 55 anos, com Diabetes Mellitus tipo 2 há 8 anos, em uso de Empagliflozina 25 mg/dia, Metformina 1.500 mg/dia e Glimepirida 4 mg/dia. Ele está internado para realização de colecistectomia eletiva por colelitíase sintomática. Apresenta bom controle glicêmico (HbA1c = 7,1%), função renal preservada (TFG = 82 mL/min/1,73m²) e não tem outras comorbidades. O médico responsável pela cirurgia decide suspender a Empagliflozina 3 dias antes do procedimento, mantendo os outros antidiabéticos.",
+  "pergunta": "Considerando os mecanismos de ação dos inibidores de SGLT2 e os riscos no período perioperatório, assinale a alternativa correta.",
+  "opcoes": [
+   "A suspensão da Empagliflozina antes da cirurgia é uma precaução desnecessária, pois esta classe de fármacos não apresenta riscos significativos no período perioperatório e pode ser mantida até o dia da cirurgia.",
+   "O principal risco que se pretende evitar com a suspensão da Empagliflozina é a cetoacidose diabética euglicêmica, uma complicação rara, mas grave, que pode ser desencadeada por situações de estresse, jejum prolongado, redução da ingesta hídrica e aumento da demanda metabólica, comuns no período perioperatório.",
+   "A Empagliflozina deve ser suspensa por apenas 24 horas antes da cirurgia, pois seu efeito sobre a glicosúria é rapidamente reversível com a suspensão do fármaco.",
+   "A substituição da Empagliflozina por um agonista GLP-1 durante o período perioperatório é a conduta mais segura, pois esta classe não apresenta risco de cetoacidose."
+  ],
+  "correta": "B",
+  "explicacao": "A Empagliflozina deve ser suspensa 3–4 dias antes da cirurgia devido ao risco de cetoacidose diabética euglicêmica no perioperatório.",
+  "erros": {
+   "A": "Incorreta porque há risco.",
+   "C": "Incorreta porque 24h é insuficiente.",
+   "D": "Incorreta porque há riscos."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – efeitos extrapiramidais",
+  "caso": "Paciente masculino, 50 anos, com diagnóstico de esquizofrenia paranoide há 10 anos, em uso regular de Haloperidol 10 mg/dia. Ele é trazido à consulta psiquiátrica de rotina pela esposa, que relata que, nos últimos meses, o paciente tem apresentado tremor fino nas mãos, rigidez muscular progressiva e lentidão notável para iniciar os movimentos, além de expressão facial hipomímica (\"cara de máscara\") e dificuldade para caminhar. Refere também que ele tem se queixado de desconforto e inquietação internos intensos, com necessidade compulsiva de ficar se movendo o tempo todo (andar de um lado para o outro, balançar as pernas). O paciente nega piora dos sintomas psicóticos.",
+  "pergunta": "Considerando os mecanismos fisiopatológicos dos efeitos extrapiramidais induzidos por antipsicóticos, assinale a alternativa correta.",
+  "opcoes": [
+   "O tremor, a rigidez e a bradicinesia caracterizam a Discinesia Tardia, uma complicação irreversível do uso crônico de antipsicóticos que requer a administração de Inibidores da VMAT2, como a Tetrabenazina.",
+   "A inquietação interna descrita pela esposa é compatível com Acatisia, enquanto o tremor e a rigidez são manifestações do Parkinsonismo induzido por antipsicóticos; a conduta inclui redução da dose ou troca para antipsicótico com menor risco extrapiramidal (ex.: Quetiapina, Clozapina), uso de anticolinérgicos (Biperideno) para o Parkinsonismo e betabloqueadores (Propranolol) para a Acatisia.",
+   "A Síndrome Neuroléptica Maligna é o diagnóstico mais provável, pois a rigidez muscular e a lentidão dos movimentos associadas ao uso crônico de Haloperidol indicam um quadro de hipertermia maligna, sendo necessária a internação imediata e a administração de Dantrolene.",
+   "A Distonia Aguda é a complicação mais frequente do uso de Haloperidol em pacientes com esquizofrenia crônica, manifestando-se por espasmos musculares sustentados e dolorosos que requerem a administração imediata de anticolinérgicos por via intramuscular."
+  ],
+  "correta": "B",
+  "explicacao": "Parkinsonismo induzido por antipsicótico: tremor, rigidez, bradicinesia e face em máscara. A conduta inclui redução da dose, troca para antipsicótico com menor risco (Quetiapina, Clozapina) e, se necessário, Biperideno.",
+  "erros": {
+   "A": "Incorreta porque Discinesia Tardia são movimentos involuntários.",
+   "C": "Incorreta porque SNM tem febre e alteração de consciência.",
+   "D": "Incorreta porque Distonia Aguda é espasmo."
+  }
+ },
+ {
+  "assunto": "Antiagregantes – DAPT",
+  "caso": "Paciente masculino, 60 anos, com diagnóstico de infarto agudo do miocárdio com supradesnível do segmento ST (IAMCSST) em parede inferior, submetido a intervenção coronariana percutânea primária com implante de stent farmacológico. Após o procedimento, a equipe médica inicia a terapia antiplaquetária dupla (DAPT) para prevenção de novos eventos trombóticos. O paciente não apresenta contraindicações a antiagregantes e tem risco hemorrágico moderado.",
+  "pergunta": "Considerando os mecanismos de ação dos antiagregantes plaquetários e as recomendações das diretrizes atuais para o manejo da SCA, assinale a alternativa correta.",
+  "opcoes": [
+   "A DAPT consiste na associação de Varfarina e Aspirina, visando inibir tanto a cascata de coagulação quanto a agregação plaquetária, com monitorização rigorosa do INR.",
+   "A DAPT preferencial na SCA consiste na associação de Aspirina (inibidor irreversível da COX-1, reduzindo a síntese de Tromboxano A2) e Ticagrelor (inibidor reversível do receptor P2Y12, bloqueando a ativação plaquetária mediada por ADP), proporcionando inibição sinérgica da agregação plaquetária por vias diferentes.",
+   "A associação de Aspirina e Clopidogrel é a única combinação disponível para DAPT, sendo ambos inibidores irreversíveis do receptor P2Y12, com início de ação lento, mas com excelente perfil de segurança.",
+   "A DAPT deve ser mantida por apenas 30 dias após a SCA, sendo substituída por monoterapia com Aspirina após esse período, independentemente do risco isquêmico ou hemorrágico do paciente."
+  ],
+  "correta": "B",
+  "explicacao": "A DAPT preferencial na SCA é Aspirina + Ticagrelor (ou Prasugrel/Clopidogrel).",
+  "erros": {
+   "A": "Incorreta porque Varfarina não é antiagregante.",
+   "C": "Incorreta porque a DAPT é mantida por 6–12 meses.",
+   "D": "Incorreta porque a Aspirina é indicada."
+  }
+ },
+ {
+  "assunto": "Varfarina – interações",
+  "caso": "Paciente masculino, 55 anos, com prótese valvar mitral metálica, em uso de Varfarina 7,5 mg/dia há 5 anos, com meta de INR entre 2,5 e 3,5. Ele comparece à consulta de rotina no ambulatório de anticoagulação com INR de 1,5 (abaixo do alvo terapêutico). Ele nega ter esquecido de tomar a medicação e informa que sua alimentação e atividades físicas permaneceram inalteradas. No entanto, relata que há cerca de 10 dias iniciou o uso de um suplemento alimentar à base de Erva de São João (Hypericum perforatum), recomendado por um amigo para melhorar o humor e a disposição. O paciente não mencionou este suplemento ao médico na consulta anterior.",
+  "pergunta": "Considerando os mecanismos de interação medicamentosa mediados pelo sistema CYP450 e o impacto de indutores enzimáticos na terapia anticoagulante, assinale a alternativa correta.",
+  "opcoes": [
+   "A redução do INR observada é explicada pela inibição da glicoproteína-P (P-gp) pela Erva de São João, que reduz a absorção intestinal da Varfarina e aumenta sua excreção biliar.",
+   "A interação entre Erva de São João e Varfarina ocorre por indução da enzima CYP2C9 (principal via de metabolismo da Varfarina) e da glicoproteína-P, resultando em aumento do metabolismo hepático, redução dos níveis plasmáticos do fármaco ativo e consequente queda do INR; a conduta é suspender a Erva de São João e ajustar a dose da Varfarina conforme INR.",
+   "A Erva de São João possui efeito anticoagulante direto, que se soma ao efeito da Varfarina, sendo necessário reduzir a dose do anticoagulante para evitar sangramento.",
+   "A interação é mediada pela inibição da CYP3A4 pela Erva de São João, que reduz o metabolismo da Varfarina, aumentando seus níveis plasmáticos e o risco de sangramento."
+  ],
+  "correta": "B",
+  "explicacao": "A Erva de São João induz a CYP2C9 e a glicoproteína-P, aumentando o metabolismo da Varfarina e reduzindo o INR.",
+  "erros": {
+   "A": "Incorreta porque é indutora.",
+   "C": "Incorreta porque não tem efeito anticoagulante direto.",
+   "D": "Incorreta porque a interação é por indução da CYP2C9, não inibição da CYP3A4."
+  }
+ },
+ {
+  "assunto": "Levotiroxina – absorção",
+  "caso": "Paciente feminina, 65 anos, com hipotireoidismo primário diagnosticado há 10 anos, em uso de Levotiroxina 100 µg/dia. Ela comparece à consulta de endocrinologia queixando-se de cansaço persistente, ganho de peso de 3 kg nos últimos 4 meses e constipação intestinal. Exames laboratoriais mostram TSH = 9,0 mUI/L (VR: 0,4–4,5) e T4 livre = 0,7 ng/dL (VR: 0,8–1,8). Ao ser questionada sobre sua rotina de medicação, ela informa que toma a Levotiroxina logo ao acordar, junto com seu café da manhã, que inclui um copo de leite com cálcio e um suplemento de ferro prescrito para anemia ferropriva. Ela refere que toma todos os medicamentos e suplementos juntos para \"facilitar a rotina\".",
+  "pergunta": "Considerando a farmacocinética da Levotiroxina e os fatores que interferem na sua absorção, assinale a alternativa correta.",
+  "opcoes": [
+   "A dose de Levotiroxina é insuficiente para o peso e a idade da paciente, sendo necessário aumentar a dose para 150 µg/dia, pois o TSH elevado indica necessidade de reposição mais intensa.",
+   "A absorção da Levotiroxina está sendo prejudicada pela ingestão concomitante de cálcio (leite) e ferro, que formam complexos insolúveis com o fármaco no trato gastrointestinal, reduzindo sua biodisponibilidade; a conduta é orientar a tomar Levotiroxina em jejum, 30–60 minutos antes do café da manhã e de outros medicamentos/suplementos, e reavaliar o TSH após 6–8 semanas.",
+   "A paciente apresenta resistência periférica aos hormônios tireoidianos, uma condição que requer a substituição da Levotiroxina por Liotinrina (T3) para obter melhor resposta clínica.",
+   "O hipotireoidismo da paciente é secundário (central), pois o T4 livre está baixo apesar do TSH elevado, sendo necessário investigar a função hipofisária com dosagem de prolactina e cortisol."
+  ],
+  "correta": "B",
+  "explicacao": "A absorção da Levotiroxina é prejudicada por cálcio e ferro. A orientação é tomar em jejum, 30–60 min antes do café da manhã, com intervalo de 4h de outros medicamentos.",
+  "erros": {
+   "A": "Incorreta porque aumentar a dose sem corrigir a administração não resolve.",
+   "C": "Incorreta porque o TSH elevado com T4 livre baixo indica hipotireoidismo primário.",
+   "D": "Incorreta porque a Liotinrina não é primeira escolha."
+  }
+ },
+ {
+  "assunto": "Dipirona – farmacocinética",
+  "caso": "Paciente feminina, 40 anos, submetida a colecistectomia videolaparoscópica há 24 horas, com dor pós-operatória moderada (escala visual analógica = 5/10). Recebe prescrição de Dipirona (metamizol sódico) 500 mg por via oral a cada 6 horas. A paciente relata desconforto gástrico quando toma o medicamento em jejum e, por isso, solicita à enfermagem que administre a Dipirona juntamente com uma refeição rica em gorduras (café da manhã com leite integral, pão com manteiga e ovos). O início da ação analgésica ocorre de forma mais lenta (cerca de 90 minutos) do que o esperado para a administração em jejum (30–45 minutos). A paciente evolui com controle insatisfatório da dor nas primeiras horas.",
+  "pergunta": "Considerando a farmacocinética da Dipirona e os fatores que interferem na sua absorção, assinale a alternativa correta.",
+  "opcoes": [
+   "A presença de alimentos ricos em gorduras acelera o esvaziamento gástrico, favorecendo a absorção rápida da Dipirona, o que contradiz o observado.",
+   "A administração concomitante de alimentos, especialmente gorduras, retarda o esvaziamento gástrico e pode prolongar o tempo para atingir o pico plasmático da Dipirona, aumentando a latência do efeito analgésico.",
+   "A absorção da Dipirona é prejudicada pela formação de quelatos com ácidos graxos no intestino delgado, reduzindo sua biodisponibilidade em até 50%.",
+   "A Dipirona sofre metabolismo de primeira passagem hepático que é potencializado pela presença de gorduras na dieta, reduzindo a fração ativa do fármaco."
+  ],
+  "correta": "B",
+  "explicacao": "A administração concomitante de alimentos, especialmente gorduras, retarda o esvaziamento gástrico e prolonga o tempo para atingir o pico plasmático da Dipirona, aumentando a latência do efeito analgésico.",
+  "erros": {
+   "A": "Incorreta porque alimentos gordurosos retardam o esvaziamento gástrico.",
+   "C": "Incorreta porque não há formação de quelatos.",
+   "D": "Incorreta porque a Dipirona não sofre metabolismo de primeira passagem significativo potencializado por gorduras."
+  }
+ },
+ {
+  "assunto": "iSGLT2 – IC-FEr e DRC",
+  "caso": "Paciente masculino, 68 anos, com insuficiência cardíaca com fração de ejeção reduzida (IC-FEr) e Diabetes Mellitus tipo 2, em uso de Dapagliflozina 10 mg/dia. Sua TFG estimada é de 40 mL/min/1,73m². Ele comparece à consulta de rotina assintomático do ponto de vista cardiovascular e com bom controle glicêmico.",
+  "pergunta": "Considerando os benefícios cardiovasculares e renais dos inibidores de SGLT2 e as recomendações para seu uso em pacientes com IC-FEr e doença renal crônica, assinale a alternativa correta.",
+  "opcoes": [
+   "A Dapagliflozina é contraindicada com TFG &lt; 45 mL/min/1,73m², pois não há benefício renal ou cardiovascular nessa faixa de função.",
+   "A Dapagliflozina reduz hospitalizações por insuficiência cardíaca e progressão da doença renal, com benefício independente do controle glicêmico, sendo recomendada para pacientes com IC-FEr e TFG ≥ 25 mL/min/1,73m².",
+   "A Dapagliflozina causa hipercalemia significativa, sendo contraindicada em pacientes com IC-FEr e disfunção renal.",
+   "A Dapagliflozina deve ser suspensa em pacientes com IC-FEr, pois aumenta o risco de descompensação cardíaca por depleção de volume."
+  ],
+  "correta": "B",
+  "explicacao": "A Dapagliflozina reduz hospitalizações por IC e progressão da DRC, com benefício independente do controle glicêmico, sendo recomendada para pacientes com IC-FEr e TFG ≥ 25 mL/min/1,73m².",
+  "erros": {
+   "A": "Incorreta porque pode ser usada com TFG ≥ 25.",
+   "C": "Incorreta porque não causa hipercalemia.",
+   "D": "Incorreta porque é indicada na IC."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – prolactina",
+  "caso": "Paciente feminina, 30 anos, com diagnóstico de esquizofrenia há 3 anos, em uso de Risperidona 4 mg/dia. Ela comparece à consulta de rotina queixando-se de amenorreia há 6 meses e galactorreia bilateral. Nega uso de contraceptivos hormonais ou outras medicações. Exames laboratoriais mostram prolactina sérica de 120 ng/mL (VR: 5–25 ng/mL).",
+  "pergunta": "Considerando os mecanismos de ação dos antipsicóticos e os efeitos sobre a via tuberoinfundibular, assinale a alternativa correta.",
+  "opcoes": [
+   "A Risperidona não causa hiperprolactinemia, pois é um antipsicótico atípico com baixo bloqueio D2.",
+   "A hiperprolactinemia é um efeito adverso da Risperidona por bloqueio D2 na via tuberoinfundibular; a conduta é considerar troca para Aripiprazol (agonista parcial D2) ou Quetiapina, que têm menor impacto na prolactina.",
+   "A conduta é aumentar a dose de Risperidona para melhorar o controle dos sintomas psicóticos e, consequentemente, reduzir a prolactina.",
+   "A hiperprolactinemia é um sinal de melhora clínica e não requer intervenção, pois indica boa resposta ao antipsicótico."
+  ],
+  "correta": "B",
+  "explicacao": "A Risperidona causa hiperprolactinemia por bloqueio D2 na via tuberoinfundibular. Pode-se trocar para Aripiprazol (agonista parcial D2) ou Quetiapina.",
+  "erros": {
+   "A": "Incorreta porque a Risperidona causa hiperprolactinemia.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque não é sinal de melhora."
+  }
+ },
+ {
+  "assunto": "Anticonvulsivantes – teratogenia",
+  "caso": "Paciente feminina, 25 anos, com diagnóstico de epilepsia mioclônica juvenil há 5 anos, em uso de Ácido Valproico 1.000 mg/dia, com bom controle das crises. Ela comparece à consulta de neurologia para aconselhamento pré-concepcional, pois está planejando engravidar nos próximos meses. Ela está preocupada com os riscos da medicação para o bebê e questiona se pode continuar o tratamento durante a gravidez.",
+  "pergunta": "Considerando os efeitos teratogênicos dos anticonvulsivantes e as recomendações para mulheres em idade fértil, assinale a alternativa correta.",
+  "opcoes": [
+   "O Ácido Valproico é considerado seguro durante a gestação, sendo a primeira escolha para epilepsia em mulheres em idade fértil, pois não apresenta riscos teratogênicos significativos.",
+   "O Ácido Valproico está associado a um risco aumentado de defeitos do tubo neural, malformações cardíacas e comprometimento neurocognitivo; deve ser substituído por Lamotrigina ou Levetiracetam, com suplementação de ácido fólico 5 mg/dia antes da concepção e durante o primeiro trimestre.",
+   "A paciente deve ser orientada a suspender completamente a medicação antes de engravidar, pois o risco de malformações fetais supera o benefício do controle das crises.",
+   "A substituição do Ácido Valproico por Carbamazepina é a melhor opção, pois este fármaco é seguro durante a gestação e tem eficácia comprovada para epilepsia mioclônica juvenil."
+  ],
+  "correta": "B",
+  "explicacao": "O Ácido Valproico está associado a risco aumentado de defeitos do tubo neural, malformações cardíacas e comprometimento neurocognitivo. Deve ser substituído por Lamotrigina ou Levetiracetam, com ácido fólico 5 mg/dia.",
+  "erros": {
+   "A": "Incorreta porque não é seguro.",
+   "C": "Incorreta porque a suspensão pode precipitar crises.",
+   "D": "Incorreta porque a Carbamazepina também tem risco teratogênico."
+  }
+ },
+ {
+  "assunto": "IECA – tosse",
+  "caso": "Paciente masculino, 55 anos, hipertenso há 10 anos, em uso de Captopril 50 mg 8/8h. Ele comparece à consulta de rotina queixando-se de tosse seca e persistente que começou há cerca de 4 meses, tornando-se mais incômoda à noite, sem relação com esforços ou posicionamento. Já utilizou xaropes antitussígenos e anti-histamínicos, sem melhora. Ao exame físico, PA = 138/86 mmHg, FC = 76 bpm, ausculta pulmonar com murmúrio vesicular universalmente audível, sem ruídos adventícios.",
+  "pergunta": "Considerando o mecanismo de ação dos inibidores da ECA e os efeitos adversos respiratórios, assinale a alternativa correta.",
+  "opcoes": [
+   "A tosse seca é um efeito adverso dos IECA, mediado pelo acúmulo de bradicinina no trato respiratório; a conduta é substituir o Captopril por um bloqueador do receptor AT1 (ex.: Losartana).",
+   "A tosse é um sinal de insuficiência cardíaca congestiva e indica necessidade de aumentar a dose do IECA.",
+   "A tosse é causada por hipercalemia induzida pelo Captopril, sendo necessário suspender o fármaco e administrar resina de troca iônica.",
+   "A tosse é um efeito adverso raro dos IECA e não justifica a troca da medicação, devendo-se apenas associar um antitussígeno opioide."
+  ],
+  "correta": "A",
+  "explicacao": "A tosse é efeito adverso dos IECA, mediado pelo acúmulo de bradicinina. A conduta é substituir por BRA (Losartana).",
+  "erros": {
+   "B": "Incorreta porque a tosse não é sinal de IC.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque não é por hipercalemia."
+  }
+ },
+ {
+  "assunto": "IC-FEr – hipercalemia",
+  "caso": "Paciente feminina, 70 anos, com insuficiência cardíaca com fração de ejeção reduzida (IC-FEr), em uso de Espironolactona 25 mg/dia. Ela comparece à consulta de rotina assintomática, mas exames laboratoriais mostram potássio sérico de 5,5 mEq/L e creatinina de 1,4 mg/dL (TFG = 42 mL/min/1,73m²).",
+  "pergunta": "Considerando o manejo da hipercalemia em pacientes com IC-FEr em uso de antagonistas mineralocorticoides, assinale a alternativa correta.",
+  "opcoes": [
+   "A Espironolactona deve ser mantida na dose atual, pois o benefício de mortalidade supera o risco de hipercalemia.",
+   "A Espironolactona deve ser reduzida ou suspensa devido à hipercalemia; deve-se monitorar potássio e função renal a cada 1–2 semanas e considerar reintrodução gradual após correção.",
+   "A Espironolactona causa hipocalemia, e o potássio elevado deve ser atribuído a outra causa.",
+   "A Espironolactina não interfere no potássio sérico, e a hipercalemia é um achado incidental."
+  ],
+  "correta": "B",
+  "explicacao": "A Espironolactona deve ser reduzida ou suspensa com K = 5,5 mEq/L.",
+  "erros": {
+   "A": "Incorreta porque há risco de hipercalemia.",
+   "C": "Incorreta porque a Espironolactona causa hipercalemia, não hipocalemia.",
+   "D": "Incorreta porque interfere no potássio."
+  }
+ },
+ {
+  "assunto": "Vasopressores e inotrópicos",
+  "caso": "Paciente masculino, 60 anos, com insuficiência cardíaca descompensada, apresenta-se em choque cardiogênico com pressão arterial de 85/50 mmHg, extremidades frias, oligúria e confusão mental. A equipe médica decide iniciar infusão venosa de Noradrenalina para suporte hemodinâmico.",
+  "pergunta": "Considerando os mecanismos de ação dos agentes vasopressores e inotrópicos, assinale a alternativa correta.",
+  "opcoes": [
+   "A Dobutamina é a primeira escolha em todos os casos de choque cardiogênico, independentemente da pressão arterial, pois aumenta a contratilidade e o débito cardíaco.",
+   "A Noradrenalina é o vasopressor de escolha no choque cardiogênico com hipotensão; sua ação alfa-1-adrenérgica promove vasoconstrição periférica e aumento da pressão arterial, podendo ser associada à Dobutamina para aumentar a contratilidade.",
+   "A Milrinona é a primeira escolha em pacientes hipotensos, pois tem efeito inodilatador e não causa arritmias.",
+   "A Levosimendana é contraindicada neste cenário, pois aumenta o consumo de oxigênio miocárdico e piora a isquemia."
+  ],
+  "correta": "B",
+  "explicacao": "A Noradrenalina é o vasopressor de escolha no choque cardiogênico com hipotensão. A Dobutamina pode ser associada para aumentar contratilidade.",
+  "erros": {
+   "A": "Incorreta porque a Dobutamina não é primeira escolha em hipotensão.",
+   "C": "Incorreta porque a Milrinona causa hipotensão.",
+   "D": "Incorreta porque a Levosimendana não aumenta o consumo de O2."
+  }
+ },
+ {
+  "assunto": "Varfarina – interações",
+  "caso": "Paciente masculino, 65 anos, com fibrilação atrial e insuficiência cardíaca, em uso de Varfarina 5 mg/dia com INR estável entre 2,0 e 3,0. Ele inicia tratamento com Amiodarona 200 mg/dia para controle de arritmia. Após 2 semanas, comparece ao ambulatório de anticoagulação com INR de 5,8, sem sinais de sangramento ativo.",
+  "pergunta": "Considerando o mecanismo de interação medicamentosa entre Amiodarona e Varfarina, assinale a alternativa correta.",
+  "opcoes": [
+   "A Amiodarona é um indutor da CYP2C9, reduzindo o INR e o risco de sangramento.",
+   "A Amiodarona é um inibidor da CYP2C9, aumentando o efeito da Varfarina e o risco de sangramento; a conduta é reduzir a dose da Varfarina, monitorar o INR e considerar suspender a Amiodarona se necessário.",
+   "A Amiodarona não interfere no metabolismo da Varfarina, e o INR elevado deve ser atribuído a erro laboratorial.",
+   "A Amiodarona aumenta a excreção renal da Varfarina, reduzindo seus níveis plasmáticos e o INR."
+  ],
+  "correta": "B",
+  "explicacao": "A Amiodarona é um inibidor da CYP2C9, aumentando o efeito da Varfarina e o risco de sangramento. Deve-se monitorar o INR e ajustar a dose.",
+  "erros": {
+   "A": "Incorreta porque é inibidora.",
+   "C": "Incorreta porque interfere.",
+   "D": "Incorreta porque não aumenta a excreção renal."
+  }
+ },
+ {
+  "assunto": "Metformina – DRC",
+  "caso": "Paciente feminina, 75 anos, com Diabetes Mellitus tipo 2 há 15 anos, em uso de Metformina 2.000 mg/dia. Exames recentes mostram TFG estimada de 30 mL/min/1,73m² e creatinina de 2,2 mg/dL. Ela comparece à consulta de rotina assintomática, com HbA1c = 7,5%.",
+  "pergunta": "Considerando a farmacocinética da Metformina e o risco de acidose lática em pacientes com disfunção renal, assinale a alternativa correta.",
+  "opcoes": [
+   "A Metformina é segura com TFG de 30 mL/min/1,73m² e deve ser mantida na dose atual para controle glicêmico.",
+   "A Metformina deve ser suspensa ou reduzida com TFG &lt; 30–45 mL/min/1,73m² devido ao risco de acidose lática; deve-se considerar substituição por outra classe de antidiabético com menor risco renal.",
+   "A Metformina deve ser aumentada para melhorar o controle glicêmico, pois a TFG reduzida diminui sua eficácia.",
+   "A Metformina não tem relação com acidose lática, e a disfunção renal não interfere em sua segurança."
+  ],
+  "correta": "B",
+  "explicacao": "A Metformina deve ser suspensa ou reduzida com TFG &lt; 30–45 mL/min/1,73m² devido ao risco de acidose lática.",
+  "erros": {
+   "A": "Incorreta porque não é segura.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque a Metformina tem relação com acidose lática."
+  }
+ },
+ {
+  "assunto": "Benzodiazepínicos – idosos",
+  "caso": "Paciente masculino, 80 anos, internado por pneumonia adquirida na comunidade. Durante a internação, apresenta quadro de confusão mental flutuante, desatenção, alucinações visuais e inversão do ciclo sono-vigília. Ele está em uso de Lorazepam 2 mg à noite para insônia, prescrito na admissão.",
+  "pergunta": "Considerando os efeitos adversos dos benzodiazepínicos em idosos e o diagnóstico diferencial de delirium, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro é compatível com demência de Alzheimer, e o Lorazepam deve ser mantido para controle da agitação.",
+   "O quadro é compatível com delirium, possivelmente precipitado pelo Lorazepam; a conduta é suspender ou reduzir o benzodiazepínico e tratar a causa base (infecção, distúrbios metabólicos).",
+   "O Lorazepam deve ser mantido, pois é o tratamento de primeira linha para delirium em idosos.",
+   "O quadro é sugestivo de síndrome serotoninérgica, e a conduta é administrar Ciproeptadina."
+  ],
+  "correta": "B",
+  "explicacao": "O quadro é compatível com delirium, possivelmente precipitado por benzodiazepínico (Lorazepam). A conduta é suspender ou reduzir o Lorazepam e tratar a causa base.",
+  "erros": {
+   "A": "Incorreta porque o quadro é agudo e flutuante.",
+   "C": "Incorreta porque manter piora.",
+   "D": "Incorreta porque não é síndrome serotoninérgica."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – SNM",
+  "caso": "Paciente masculino, 40 anos, com diagnóstico de esquizofrenia, em uso de Haloperidol 10 mg/dia. Ele é trazido ao pronto-socorro com quadro de febre alta (39,5°C), rigidez muscular generalizada em \"cano de chumbo\", alteração do nível de consciência, taquicardia e instabilidade autonômica. Exames laboratoriais mostram CK = 8.000 U/L e leucocitose.",
+  "pergunta": "Considerando os mecanismos fisiopatológicos e o tratamento da Síndrome Neuroléptica Maligna, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro é compatível com Síndrome Serotoninérgica, e a conduta é administrar benzodiazepínicos e Ciproeptadina.",
+   "O quadro é compatível com Síndrome Neuroléptica Maligna; a conduta é suspender o antipsicótico, administrar Dantrolene e Bromocriptina, e fornecer suporte intensivo com monitorização hemodinâmica.",
+   "O quadro é compatível com Distonia Aguda, e a conduta é administrar Biperideno IM.",
+   "O quadro é compatível com Acatisia, e a conduta é administrar Propranolol e reduzir a dose do antipsicótico."
+  ],
+  "correta": "B",
+  "explicacao": "O quadro é compatível com Síndrome Neuroléptica Maligna. A conduta é suspender o antipsicótico, administrar Dantrolene e Bromocriptina, e suporte intensivo.",
+  "erros": {
+   "A": "Incorreta porque não é serotoninérgica.",
+   "C": "Incorreta porque Distonia Aguda é espasmo.",
+   "D": "Incorreta porque Acatisia é inquietação."
+  }
+ },
+ {
+  "assunto": "Antiagregantes – DAPT",
+  "caso": "Paciente masculino, 60 anos, em uso de Aspirina 100 mg/dia e Clopidogrel 75 mg/dia após implante de stent coronariano há 3 meses. Ele apresenta quadro de apendicite aguda e necessita de cirurgia de emergência.",
+  "pergunta": "Considerando o manejo da terapia antiplaquetária dupla (DAPT) no perioperatório e o equilíbrio entre risco trombótico e hemorrágico, assinale a alternativa correta.",
+  "opcoes": [
+   "A DAPT deve ser mantida durante a cirurgia, pois o risco trombótico do stent supera o risco hemorrágico.",
+   "A decisão sobre suspensão da DAPT deve considerar o risco trombótico vs. hemorrágico; em geral, a Aspirina pode ser mantida e o Clopidogrel suspenso 5–7 dias antes da cirurgia, se possível, com reintrodução precoce no pós-operatório.",
+   "A Aspirina deve ser suspensa 30 dias antes da cirurgia, e o Clopidogrel mantido até o dia do procedimento.",
+   "O Clopidogrel não interfere na agregação plaquetária e pode ser mantido sem risco de sangramento."
+  ],
+  "correta": "B",
+  "explicacao": "A decisão sobre suspensão da DAPT deve considerar o risco trombótico vs. hemorrágico. Em geral, Aspirina pode ser mantida e Clopidogrel suspenso 5–7 dias antes.",
+  "erros": {
+   "A": "Incorreta porque manter aumenta risco hemorrágico.",
+   "C": "Incorreta porque 30 dias é excessivo.",
+   "D": "Incorreta porque o Clopidogrel inibe a agregação plaquetária."
+  }
+ },
+ {
+  "assunto": "Estatinas – miotoxicidade",
+  "caso": "Paciente feminina, 58 anos, com dislipidemia, em uso de Atorvastatina 40 mg/dia. Ela inicia tratamento com Claritromicina 500 mg 12/12h para sinusite bacteriana. Após 5 dias, apresenta mialgia intensa em coxas e braços, com CK = 3.200 U/L.",
+  "pergunta": "Considerando a farmacocinética das estatinas e o risco de miotoxicidade associado a interações medicamentosas, assinale a alternativa correta.",
+  "opcoes": [
+   "A Claritromicina inibe a CYP3A4, aumentando os níveis de Atorvastatina e o risco de miotoxicidade; a conduta é suspender temporariamente a estatina ou reduzir a dose durante o uso do antibiótico.",
+   "A Claritromicina induz a CYP3A4, reduzindo a eficácia da Atorvastatina e causando mialgia por depleção de coenzima Q10.",
+   "A associação é segura, e a mialgia é um efeito esperado da Atorvastatina que não requer intervenção.",
+   "A Claritromicina aumenta a excreção renal da Atorvastatina, reduzindo seus níveis plasmáticos e causando mialgia."
+  ],
+  "correta": "A",
+  "explicacao": "A Claritromicina inibe a CYP3A4, aumentando os níveis de Atorvastatina e o risco de miotoxicidade. Deve-se considerar suspender temporariamente a estatina ou reduzir a dose.",
+  "erros": {
+   "B": "Incorreta porque é inibidora.",
+   "C": "Incorreta porque a associação não é segura.",
+   "D": "Incorreta porque não aumenta a excreção renal."
+  }
+ },
+ {
+  "assunto": "iSGLT2 – infecções geniturinárias",
+  "caso": "Paciente masculino, 55 anos, com Diabetes Mellitus tipo 2, em uso de Dapagliflozina 10 mg/dia. Ele comparece à consulta de rotina queixando-se de prurido e corrimento esbranquiçado no pênis, sendo diagnosticado com balanopostite por Candida.",
+  "pergunta": "Considerando os efeitos adversos dos inibidores de SGLT2 e o manejo de infecções geniturinárias, assinale a alternativa correta.",
+  "opcoes": [
+   "A Dapagliflozina não aumenta o risco de infecções geniturinárias, e o quadro é incidental.",
+   "A Dapagliflozina aumenta o risco de infecções geniturinárias por Candida devido à glicosúria; a conduta é tratar a infecção e considerar manutenção ou troca conforme gravidade e recorrência.",
+   "A Dapagliflozina causa infecções respiratórias, e o quadro genital não tem relação com o fármaco.",
+   "A Dapagliflozina deve ser suspensa definitivamente, pois infecções geniturinárias são contraindicações absolutas ao seu uso."
+  ],
+  "correta": "B",
+  "explicacao": "A Dapagliflozina aumenta o risco de infecções geniturinárias por Candida devido à glicosúria. A conduta é tratar a infecção e considerar manutenção ou troca conforme gravidade.",
+  "erros": {
+   "A": "Incorreta porque aumenta o risco.",
+   "C": "Incorreta porque não causa infecção respiratória.",
+   "D": "Incorreta porque a suspensão definitiva não é necessária."
+  }
+ },
+ {
+  "assunto": "Anticonvulsivantes – interações CYP450",
+  "caso": "Paciente masculino, 30 anos, com diagnóstico de epilepsia focal, em uso de Fenitoína 300 mg/dia, com bom controle das crises. Ele inicia tratamento para tuberculose com Rifampicina, Isoniazida, Pirazinamida e Etambutol. Após 2 semanas, apresenta recorrência das crises epilépticas. Níveis séricos de Fenitoína mostram-se reduzidos.",
+  "pergunta": "Considerando as interações medicamentosas mediadas pelo sistema CYP450, assinale a alternativa correta.",
+  "opcoes": [
+   "A Rifampicina induz a CYP2C9 e a glicoproteína-P, aumentando o metabolismo da Fenitoína e reduzindo seus níveis séricos; a conduta é monitorar níveis séricos e ajustar a dose da Fenitoína.",
+   "A Rifampicina inibe a CYP2C9, aumentando os níveis de Fenitoína e causando toxicidade.",
+   "A Rifampicina não interfere no metabolismo da Fenitoína, e a recorrência das crises deve ser atribuída à progressão da doença.",
+   "A Rifampicina aumenta a absorção intestinal da Fenitoína, elevando seus níveis séricos e causando crises."
+  ],
+  "correta": "A",
+  "explicacao": "A Rifampicina induz a CYP2C9 e a glicoproteína-P, reduzindo os níveis de Fenitoína e o controle das crises. Deve-se monitorar níveis séricos e ajustar a dose.",
+  "erros": {
+   "B": "Incorreta porque é indutora.",
+   "C": "Incorreta porque interfere.",
+   "D": "Incorreta porque não aumenta a absorção."
+  }
+ },
+ {
+  "assunto": "Antidepressivos – disfunção sexual",
+  "caso": "Paciente feminina, 35 anos, com diagnóstico de transtorno depressivo maior, em uso de Fluoxetina 40 mg/dia há 6 meses, com boa resposta. Ela comparece à consulta psiquiátrica queixando-se de diminuição da libido e anorgasmia, que começaram após o início do antidepressivo e têm causado impacto significativo em seu relacionamento.",
+  "pergunta": "Considerando os efeitos adversos sexuais dos antidepressivos e as estratégias de manejo, assinale a alternativa correta.",
+  "opcoes": [
+   "A disfunção sexual é um efeito adverso comum dos ISRS; pode-se considerar troca para Bupropiona, Mirtazapina ou Vortioxetina, ou associar Bupropiona para mitigar o efeito.",
+   "A disfunção sexual não tem relação com a Fluoxetina, e a paciente deve ser encaminhada para avaliação ginecológica.",
+   "A conduta é aumentar a dose de Fluoxetina para 60 mg/dia, pois a disfunção sexual indica que a dose atual é insuficiente.",
+   "A disfunção sexual é um sinal de piora da depressão e indica necessidade de internação psiquiátrica."
+  ],
+  "correta": "A",
+  "explicacao": "A disfunção sexual é efeito adverso comum dos ISRS. Pode-se considerar troca para Bupropiona, Mirtazapina ou Vortioxetina, ou associar Bupropiona.",
+  "erros": {
+   "B": "Incorreta porque tem relação.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque não é sinal de piora da depressão."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – efeitos extrapiramidais",
+  "caso": "Paciente masculino, 25 anos, com diagnóstico de esquizofrenia, em uso de Aripiprazol 15 mg/dia. Ele comparece à consulta de rotina queixando-se de inquietação interna intensa, necessidade imperiosa de mover as pernas e incapacidade de permanecer sentado por longos períodos. Relata que os sintomas começaram após o aumento da dose do antipsicótico e estão causando prejuízo significativo em suas atividades diárias.",
+  "pergunta": "Considerando os efeitos extrapiramidais induzidos por antipsicóticos e o manejo da Acatisia, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro é compatível com Acatisia; a conduta inclui Propranolol, redução da dose ou troca para antipsicótico com menor risco, e, se necessário, benzodiazepínicos.",
+   "O quadro é compatível com Distonia Aguda; a conduta é administrar Biperideno IM.",
+   "O quadro é compatível com Parkinsonismo; a conduta é administrar Levodopa.",
+   "O quadro é compatível com Discinesia Tardia; a conduta é administrar Tetrabenazina."
+  ],
+  "correta": "A",
+  "explicacao": "O quadro é compatível com Acatisia. A conduta inclui Propranolol, redução da dose ou troca para antipsicótico com menor risco.",
+  "erros": {
+   "B": "Incorreta porque Distonia Aguda é espasmo.",
+   "C": "Incorreta porque Parkinsonismo é tremor e rigidez.",
+   "D": "Incorreta porque Discinesia Tardia são movimentos involuntários."
+  }
+ },
+ {
+  "assunto": "Varfarina – interações",
+  "caso": "Paciente feminina, 60 anos, com fibrilação atrial, em uso de Varfarina 5 mg/dia, com meta de INR entre 2,0 e 3,0. Ela comparece ao ambulatório de anticoagulação com INR de 1,8. Relata que aumentou significativamente o consumo de vegetais verdes folhosos (couve, brócolis, espinafre) nas últimas semanas, por orientação nutricional.",
+  "pergunta": "Considerando a interação entre vitamina K da dieta e Varfarina, assinale a alternativa correta.",
+  "opcoes": [
+   "A vitamina K presente nos vegetais verdes antagoniza a Varfarina, reduzindo o INR; a orientação é manter consumo constante e ajustar a dose da Varfarina conforme INR.",
+   "Os vegetais verdes aumentam o INR, pois potencializam o efeito anticoagulante da Varfarina.",
+   "A dieta não interfere no INR, e o valor de 1,8 está dentro da meta terapêutica.",
+   "A paciente deve suspender a Varfarina e iniciar Aspirina como alternativa anticoagulante."
+  ],
+  "correta": "A",
+  "explicacao": "A vitamina K presente nos vegetais verdes antagoniza a Varfarina, reduzindo o INR. A orientação é manter consumo constante e ajustar a dose conforme INR.",
+  "erros": {
+   "B": "Incorreta porque reduz o INR.",
+   "C": "Incorreta porque a dieta interfere.",
+   "D": "Incorreta porque a suspensão da Varfarina não é indicada."
+  }
+ },
+ {
+  "assunto": "Sulfonilureias – hipoglicemia",
+  "caso": "Paciente masculino, 70 anos, com Diabetes Mellitus tipo 2 há 15 anos, em uso de Glibenclamida 10 mg/dia. Ele comparece ao pronto-socorro trazido pela filha, que relata que o paciente apresentou episódios de sudorese profusa, tremores, confusão mental e agitação nas últimas 24 horas. Glicemia capilar no momento da avaliação é de 45 mg/dL.",
+  "pergunta": "Considerando o mecanismo de ação das sulfonilureias e o risco de hipoglicemia em idosos, assinale a alternativa correta.",
+  "opcoes": [
+   "A Glibenclamida é segura em idosos e não causa hipoglicemia, e o quadro deve ser atribuído a outra causa.",
+   "As sulfonilureias, especialmente a Glibenclamida, causam hipoglicemia grave por aumento da secreção de insulina; em idosos, o risco é maior; a conduta é reduzir ou substituir por fármaco com menor risco (ex.: DPP-4, iSGLT2, GLP-1).",
+   "A hipoglicemia é um efeito esperado e autolimitado da Glibenclamida, não requerendo ajuste terapêutico.",
+   "A Glibenclamida deve ser aumentada para melhorar o controle glicêmico e evitar episódios futuros de hipoglicemia."
+  ],
+  "correta": "B",
+  "explicacao": "As sulfonilureias (Glibenclamida) causam hipoglicemia grave, particularmente em idosos. A conduta é reduzir ou substituir por fármaco com menor risco (DPP-4, iSGLT2, GLP-1).",
+  "erros": {
+   "A": "Incorreta porque não é segura.",
+   "C": "Incorreta porque a hipoglicemia requer ajuste.",
+   "D": "Incorreta porque aumentar a dose piora."
+  }
+ },
+ {
+  "assunto": "Dipirona – interações",
+  "caso": "Paciente masculino, 45 anos, com dor moderada pós-operatória, recebe prescrição de Dipirona 1 g por via oral. Ele faz uso crônico de Fenobarbital 100 mg/dia para epilepsia.",
+  "pergunta": "Considerando a farmacocinética da Dipirona e as possíveis interações medicamentosas, assinale a alternativa correta.",
+  "opcoes": [
+   "A Dipirona é metabolizada no fígado, formando metabólitos ativos como o 4-metilaminoantipirina, com meia-vida de eliminação de 3–5 horas; indutores enzimáticos como o Fenobarbital podem acelerar seu metabolismo e reduzir sua eficácia analgésica.",
+   "A Dipirona é excretada inalterada pelos rins e não sofre interferência de indutores enzimáticos.",
+   "A Dipirona tem meia-vida de eliminação de 12 horas, e o Fenobarbital aumenta sua biodisponibilidade.",
+   "A Dipirona não sofre metabolismo hepático, e a interação com Fenobarbital é inexistente."
+  ],
+  "correta": "A",
+  "explicacao": "A Dipirona é metabolizada no fígado, formando metabólitos ativos como o 4-metilaminoantipirina, com meia-vida de 3–5 horas; indutores enzimáticos como o Fenobarbital podem acelerar seu metabolismo e reduzir sua eficácia analgésica.",
+  "erros": {
+   "B": "Incorreta porque não é excretada inalterada.",
+   "C": "Incorreta porque a meia-vida é de 3–5h.",
+   "D": "Incorreta porque sofre metabolismo hepático."
+  }
+ },
+ {
+  "assunto": "Betabloqueadores – primeira passagem",
+  "caso": "Paciente masculino, 50 anos, com hipertensão arterial sistêmica, recebe prescrição de Propranolol 80 mg por via oral a cada 8 horas. O médico assistente observa que a dose oral necessária para obter efeito anti-hipertensivo é significativamente maior que a dose intravenosa equivalente. Ele explica ao paciente que isso ocorre devido a características farmacocinéticas do fármaco.",
+  "pergunta": "Considerando o metabolismo de primeira passagem do Propranolol e sua implicação clínica, assinale a alternativa correta.",
+  "opcoes": [
+   "O Propranolol não sofre metabolismo hepático, e a diferença entre as vias oral e intravenosa é devida à menor absorção gastrointestinal.",
+   "O Propranolol sofre extenso metabolismo de primeira passagem hepático, reduzindo sua biodisponibilidade oral; por isso, a dose oral necessária é maior que a intravenosa para atingir efeitos terapêuticos equivalentes.",
+   "O Propranolol é excretado inalterado pelos rins, e a dose oral é maior porque a via intravenosa evita a filtração glomerular.",
+   "A biodisponibilidade oral do Propranolol é de 100%, e a diferença de dose é devida à menor potência da via oral."
+  ],
+  "correta": "B",
+  "explicacao": "O Propranolol sofre extenso metabolismo de primeira passagem hepático, reduzindo sua biodisponibilidade oral. Por isso, a dose oral é maior que a IV.",
+  "erros": {
+   "A": "Incorreta porque sofre metabolismo hepático.",
+   "C": "Incorreta porque não é excretado inalterado.",
+   "D": "Incorreta porque a biodisponibilidade é baixa (~25%)."
+  }
+ },
+ {
+  "assunto": "Varfarina – interações",
+  "caso": "Paciente feminina, 68 anos, com fibrilação atrial, em uso de Varfarina 5 mg/dia, com INR estável entre 2,0 e 3,0. Ela inicia tratamento com Ibuprofeno 600 mg a cada 8 horas para artralgia de joelhos. Após 4 dias, comparece ao pronto-socorro com hematêmese, melena e INR de 5,5.",
+  "pergunta": "Considerando os mecanismos de interação entre AINEs e Varfarina, assinale a alternativa correta.",
+  "opcoes": [
+   "O Ibuprofeno não interfere na farmacocinética da Varfarina, e o sangramento é devido apenas à lesão gástrica direta.",
+   "O Ibuprofeno inibe a CYP2C9, aumentando os níveis de Varfarina, e ainda inibe a agregação plaquetária e lesa a mucosa gástrica, aumentando significativamente o risco de sangramento; a conduta é suspender o AINE, administrar vitamina K e monitorar o INR.",
+   "O Ibuprofeno induz a CYP2C9, reduzindo o INR e o risco de sangramento.",
+   "O Ibuprofeno aumenta a excreção renal da Varfarina, reduzindo seus níveis plasmáticos e o INR."
+  ],
+  "correta": "B",
+  "explicacao": "O Ibuprofeno inibe a CYP2C9, aumentando os níveis de Varfarina, e ainda inibe a agregação plaquetária e lesa a mucosa gástrica, aumentando o risco de sangramento.",
+  "erros": {
+   "A": "Incorreta porque interfere.",
+   "C": "Incorreta porque é inibidor.",
+   "D": "Incorreta porque não aumenta a excreção renal."
+  }
+ },
+ {
+  "assunto": "Antidiabéticos – pioglitazona na IC",
+  "caso": "Paciente masculino, 65 anos, com Diabetes Mellitus tipo 2 e insuficiência cardíaca com fração de ejeção reduzida (FE = 35%), em uso de Metformina 1.500 mg/dia, Carvedilol 12,5 mg/dia, Enalapril 20 mg/dia e Furosemida 40 mg/dia. Sua HbA1c é de 8,5%, e o médico considera adicionar Pioglitazona para melhorar o controle glicêmico.",
+  "pergunta": "Considerando os efeitos da Pioglitazona no sistema cardiovascular e as recomendações para pacientes com IC-FEr, assinale a alternativa correta.",
+  "opcoes": [
+   "A Pioglitazona é a melhor opção, pois reduz eventos cardiovasculares e melhora a função cardíaca em pacientes com IC-FEr.",
+   "A Pioglitazona é contraindicada na IC-FEr, pois causa retenção hídrica e pode precipitar descompensação cardíaca; deve-se preferir iSGLT2 (ex.: Dapagliflozina) ou agonista GLP-1.",
+   "A Pioglitazona é segura na IC-FEr e deve ser adicionada para melhorar o controle glicêmico.",
+   "A Pioglitazona reduz o risco de hospitalização por insuficiência cardíaca em pacientes com IC-FEr."
+  ],
+  "correta": "B",
+  "explicacao": "A Pioglitazona é contraindicada na IC-FEr, pois causa retenção hídrica e pode precipitar descompensação. Deve-se preferir iSGLT2 ou GLP-1.",
+  "erros": {
+   "A": "Incorreta porque não reduz eventos na IC.",
+   "C": "Incorreta porque não é segura.",
+   "D": "Incorreta porque não reduz hospitalização por IC."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – QT longo",
+  "caso": "Paciente feminina, 45 anos, com diagnóstico de esquizofrenia, em uso de Haloperidol 10 mg/dia há 2 anos. Ela comparece à consulta de rotina queixando-se de episódios de síncope e palpitações. O eletrocardiograma revela intervalo QT corrigido de 520 ms.",
+  "pergunta": "Considerando os efeitos dos antipsicóticos sobre o intervalo QT e o risco de arritmias ventriculares, assinale a alternativa correta.",
+  "opcoes": [
+   "O Haloperidol não interfere no intervalo QT, e a síncope deve ser investigada por outras causas.",
+   "O Haloperidol pode prolongar o intervalo QT e causar torsades de pointes; a conduta é suspender ou reduzir a dose, corrigir distúrbios eletrolíticos (hipocalemia, hipomagnesemia) e considerar troca para antipsicótico com menor risco (ex.: Aripiprazol).",
+   "O QT longo é um efeito esperado e benigno do Haloperidol, não requerendo intervenção.",
+   "A conduta é aumentar a dose de Haloperidol para melhorar o controle dos sintomas psicóticos e, consequentemente, reduzir o QT."
+  ],
+  "correta": "B",
+  "explicacao": "O Haloperidol pode prolongar o intervalo QT e causar torsades de pointes. A conduta é suspender ou reduzir a dose, corrigir distúrbios eletrolíticos e considerar troca para antipsicótico com menor risco (Aripiprazol).",
+  "erros": {
+   "A": "Incorreta porque interfere no QT.",
+   "C": "Incorreta porque o QT longo requer intervenção.",
+   "D": "Incorreta porque aumentar a dose piora."
+  }
+ },
+ {
+  "assunto": "Anticonvulsivantes – metabolismo ósseo",
+  "caso": "Paciente masculino, 55 anos, com epilepsia focal, em uso de Fenitoína 300 mg/dia há 10 anos. Ele comparece à consulta de rotina queixando-se de dor óssea difusa e apresenta fratura de costela após trauma leve. Densitometria óssea revela osteopenia. Exames laboratoriais mostram cálcio sérico normal e vitamina D reduzida.",
+  "pergunta": "Considerando os efeitos dos anticonvulsivantes indutores enzimáticos sobre o metabolismo ósseo, assinale a alternativa correta.",
+  "opcoes": [
+   "A Fenitoína não interfere no metabolismo ósseo, e a osteopenia deve ser atribuída ao envelhecimento.",
+   "Anticonvulsivantes indutores enzimáticos (Fenitoína, Carbamazepina, Fenobarbital) aceleram o metabolismo da vitamina D, podendo causar osteomalácia e osteoporose; deve-se monitorar e suplementar vitamina D e cálcio.",
+   "A Fenitoína aumenta a densidade mineral óssea, prevenindo fraturas.",
+   "A osteoporose é independente do uso de anticonvulsivantes e não requer monitorização."
+  ],
+  "correta": "B",
+  "explicacao": "Anticonvulsivantes indutores enzimáticos (Fenitoína, Carbamazepina, Fenobarbital) aceleram o metabolismo da vitamina D, podendo causar osteomalácia e osteoporose. Deve-se monitorar e suplementar vitamina D e cálcio.",
+  "erros": {
+   "A": "Incorreta porque interfere.",
+   "C": "Incorreta porque reduz a densidade mineral óssea.",
+   "D": "Incorreta porque há relação."
+  }
+ },
+ {
+  "assunto": "Betabloqueadores – asma",
+  "caso": "Paciente masculino, 60 anos, com hipertensão arterial sistêmica e asma brônquica moderada, em uso de Propranolol 80 mg/dia. Ele comparece à consulta de rotina queixando-se de piora da dispneia e sibilância nos últimos meses, com necessidade frequente de broncodilatador de resgate.",
+  "pergunta": "Considerando os efeitos dos betabloqueadores sobre a via aérea e as recomendações para pacientes asmáticos, assinale a alternativa correta.",
+  "opcoes": [
+   "O Propranolol é seguro em asmáticos, pois é cardiosseletivo e não interfere nos receptores β2 pulmonares.",
+   "O Propranolol é um betabloqueador não seletivo e pode causar broncoespasmo por bloqueio de receptores β2; deve-se substituir por betabloqueador cardiosseletivo (ex.: Atenolol, Bisoprolol) ou outra classe anti-hipertensiva.",
+   "O Propranolol melhora a função pulmonar em asmáticos por reduzir a taquicardia e a ansiedade.",
+   "A conduta é aumentar a dose de Propranolol para melhorar o controle da pressão arterial e da asma."
+  ],
+  "correta": "B",
+  "explicacao": "O Propranolol é betabloqueador não seletivo e pode causar broncoespasmo por bloqueio de receptores β2. Deve-se substituir por betabloqueador cardiosseletivo (Atenolol, Bisoprolol) ou outra classe.",
+  "erros": {
+   "A": "Incorreta porque não é seguro.",
+   "C": "Incorreta porque não melhora a asma.",
+   "D": "Incorreta porque aumentar a dose piora."
+  }
+ },
+ {
+  "assunto": "Estatinas – hepatotoxicidade",
+  "caso": "Paciente feminina, 55 anos, com dislipidemia, em uso de Atorvastatina 80 mg/dia. Exames laboratoriais de rotina mostram AST = 180 U/L e ALT = 210 U/L (3 vezes o limite superior da normalidade). Ela nega sintomas de hepatopatia, álcool ou uso de outros hepatotóxicos.",
+  "pergunta": "Considerando o manejo da elevação de transaminases em pacientes em uso de estatinas, assinale a alternativa correta.",
+  "opcoes": [
+   "A Atorvastatina deve ser mantida na dose atual, pois a elevação de transaminases é esperada e não requer intervenção.",
+   "A elevação de transaminases &gt; 3 vezes o limite superior da normalidade requer suspensão ou redução da estatina e investigação de outras causas; pode-se tentar reintrodução com dose menor ou troca para outra estatina após normalização.",
+   "A Atorvastatina deve ser aumentada para melhorar o controle lipídico, pois a elevação de transaminases indica maior efeito farmacológico.",
+   "A Atorvastatina deve ser substituída por Sinvastatina, pois esta não causa hepatotoxicidade."
+  ],
+  "correta": "B",
+  "explicacao": "A elevação de transaminases &gt; 3x o limite superior requer suspensão ou redução da estatina e investigação de outras causas. Pode-se tentar reintrodução com dose menor ou troca para outra estatina.",
+  "erros": {
+   "A": "Incorreta porque manter a dose é risco.",
+   "C": "Incorreta porque requer conduta.",
+   "D": "Incorreta porque aumentar a dose piora."
+  }
+ },
+ {
+  "assunto": "IC-FEr – ivabradina",
+  "caso": "Paciente masculino, 58 anos, com insuficiência cardíaca com fração de ejeção reduzida (FE = 30%), em uso de Carvedilol 25 mg 12/12h (dose máxima tolerada), Enalapril 20 mg/dia e Espironolactona 25 mg/dia. Ele comparece à consulta de rotina com frequência cardíaca de 88 bpm em ritmo sinusal, apesar da dose otimizada de betabloqueador.",
+  "pergunta": "Considerando o mecanismo de ação da Ivabradina e seu papel no tratamento da IC-FEr, assinale a alternativa correta.",
+  "opcoes": [
+   "A Ivabradina é contraindicada na IC-FEr, pois aumenta o risco de arritmias ventriculares.",
+   "A Ivabradina inibe a corrente If no nó sinusal, reduzindo a frequência cardíaca sem efeito inotrópico negativo; pode ser adicionada em pacientes com FC ≥ 70 bpm apesar de betabloqueador em dose otimizada, reduzindo hospitalizações por IC.",
+   "A Ivabradina aumenta a frequência cardíaca e deve ser usada em pacientes com bradicardia.",
+   "A Ivabradina substitui o betabloqueador no tratamento da IC-FEr, permitindo sua suspensão."
+  ],
+  "correta": "B",
+  "explicacao": "A Ivabradina inibe a corrente If no nó sinusal, reduzindo a FC sem efeito inotrópico negativo. Pode ser adicionada em pacientes com FC ≥ 70 bpm apesar de betabloqueador em dose otimizada.",
+  "erros": {
+   "A": "Incorreta porque não é contraindicada.",
+   "C": "Incorreta porque reduz a FC.",
+   "D": "Incorreta porque não substitui o betabloqueador."
+  }
+ },
+ {
+  "assunto": "Síndrome serotoninérgica",
+  "caso": "Paciente feminina, 40 anos, com diagnóstico de transtorno depressivo maior, em uso de Fluoxetina 40 mg/dia. Ela é internada para tratamento de pneumonia por MRSA e inicia Linezolida 600 mg 12/12h. Após 3 dias, apresenta agitação, tremor, hiperreflexia, clônus e sudorese.",
+  "pergunta": "Considerando os mecanismos de interação medicamentosa no sistema nervoso central, assinale a alternativa correta.",
+  "opcoes": [
+   "A Linezolida é um inibidor da monoamina oxidase (IMAO) e pode precipitar síndrome serotoninérgica com ISRS; a conduta é suspender a Linezolida e a Fluoxetina, administrar benzodiazepínicos e suporte.",
+   "A Linezolida não interfere na serotonina, e o quadro é compatível com crise de pânico.",
+   "A associação entre Linezolida e Fluoxetina é segura, e o quadro é um efeito adverso esperado da Linezolida.",
+   "O quadro é compatível com Síndrome Neuroléptica Maligna, e a conduta é administrar Dantrolene."
+  ],
+  "correta": "A",
+  "explicacao": "A Linezolida é um IMAO e pode precipitar síndrome serotoninérgica com ISRS. A conduta é suspender a Linezolida e a Fluoxetina, e administrar benzodiazepínicos.",
+  "erros": {
+   "B": "Incorreta porque interfere na serotonina.",
+   "C": "Incorreta porque não é segura.",
+   "D": "Incorreta porque o quadro é serotoninérgico."
+  }
+ },
+ {
+  "assunto": "Corticoides – mania",
+  "caso": "Paciente masculino, 45 anos, com doença de Crohn em surto moderado, inicia Prednisona 60 mg/dia. Após 5 dias, a esposa relata que o paciente está eufórico, dormindo apenas 3 horas por noite, falando de forma acelerada, fazendo compras excessivas e apresentando ideias de grandeza. Ele nega histórico prévio de episódios maníacos.",
+  "pergunta": "Considerando os efeitos adversos psiquiátricos dos corticoides e o manejo da mania induzida por fármacos, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro é compatível com mania induzida por corticoide; a conduta é reduzir ou suspender o corticoide gradualmente e considerar antipsicótico atípico ou estabilizador de humor.",
+   "O corticoide não causa sintomas psiquiátricos, e o quadro é compatível com transtorno bipolar de início recente.",
+   "A conduta é aumentar a dose de Prednisona para melhorar o controle da doença de Crohn e, consequentemente, dos sintomas psiquiátricos.",
+   "O quadro é compatível com depressão maior, e a conduta é iniciar antidepressivo."
+  ],
+  "correta": "A",
+  "explicacao": "O quadro é compatível com mania induzida por corticoide. A conduta é reduzir ou suspender o corticoide gradualmente e considerar antipsicótico atípico ou estabilizador de humor.",
+  "erros": {
+   "B": "Incorreta porque o corticoide causa sintomas psiquiátricos.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque o quadro é maníaco."
+  }
+ },
+ {
+  "assunto": "Benzodiazepínicos – abstinência",
+  "caso": "Paciente feminina, 55 anos, com diagnóstico de transtorno de ansiedade generalizada, em uso de Alprazolam 2 mg/dia há 5 anos. Ela decide suspender a medicação por conta própria e, após 48 horas, apresenta tremor, sudorese, taquicardia, ansiedade intensa, insônia e irritabilidade.",
+  "pergunta": "Considerando a farmacologia dos benzodiazepínicos e o manejo da síndrome de abstinência, assinale a alternativa correta.",
+  "opcoes": [
+   "A suspensão abrupta de benzodiazepínicos é segura e não causa sintomas de abstinência.",
+   "Os benzodiazepínicos causam dependência física; a suspensão deve ser gradual (redução de 10–25% da dose a cada 2–4 semanas) para evitar síndrome de abstinência, que pode incluir convulsões.",
+   "A paciente deve manter a dose atual indefinidamente, pois a dependência é irreversível.",
+   "A síndrome de abstinência de benzodiazepínicos não ocorre com o uso de Alprazolam, que é de meia-vida curta."
+  ],
+  "correta": "B",
+  "explicacao": "Os benzodiazepínicos causam dependência física. A suspensão deve ser gradual (redução de 10–25% a cada 2–4 semanas) para evitar síndrome de abstinência.",
+  "erros": {
+   "A": "Incorreta porque a suspensão abrupta é perigosa.",
+   "C": "Incorreta porque manter indefinidamente não é ideal.",
+   "D": "Incorreta porque a síndrome de abstinência ocorre."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – efeitos extrapiramidais",
+  "caso": "Paciente masculino, 60 anos, com diagnóstico de esquizofrenia há 15 anos, em uso de Haloperidol 10 mg/dia. Ele comparece à consulta acompanhado da esposa, que relata movimentos involuntários da língua, lábios e face, que pioram quando o paciente está ansioso e desaparecem durante o sono.",
+  "pergunta": "Considerando os efeitos extrapiramidais tardios dos antipsicóticos e o manejo da Discinesia Tardia, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro é compatível com Discinesia Tardia; a conduta inclui redução ou troca do antipsicótico e, se necessário, Inibidores da VMAT2 (Tetrabenazina) ou Clozapina.",
+   "O quadro é compatível com Distonia Aguda, e a conduta é administrar Biperideno IM.",
+   "O quadro é compatível com Acatisia, e a conduta é administrar Propranolol.",
+   "O quadro é compatível com Parkinsonismo, e a conduta é administrar Levodopa."
+  ],
+  "correta": "A",
+  "explicacao": "O quadro é compatível com Discinesia Tardia. A conduta inclui redução ou troca do antipsicótico e, se necessário, Inibidores da VMAT2 (Tetrabenazina) ou Clozapina.",
+  "erros": {
+   "B": "Incorreta porque Distonia Aguda é espasmo.",
+   "C": "Incorreta porque Acatisia é inquietação.",
+   "D": "Incorreta porque Parkinsonismo é tremor e rigidez."
+  }
+ },
+ {
+  "assunto": "IC-FEr – titulação",
+  "caso": "Paciente feminina, 70 anos, com insuficiência cardíaca com fração de ejeção reduzida (FE = 28%), em uso de Carvedilol 3,125 mg 12/12h, Enalapril 10 mg/dia, Espironolactona 25 mg/dia e Furosemida 40 mg/dia. Ela comparece à consulta de rotina com PA = 100/60 mmHg e FC = 72 bpm.",
+  "pergunta": "Considerando a titulação dos betabloqueadores na IC-FEr e as recomendações das diretrizes, assinale a alternativa correta.",
+  "opcoes": [
+   "O Carvedilol deve ser mantido na dose atual indefinidamente, pois a dose baixa é suficiente para o benefício clínico.",
+   "A titulação do Carvedilol deve ser gradual (dobrar a dose a cada 2–4 semanas) até a dose-alvo ou máxima tolerada, monitorando PA, FC e sintomas, pois a dose atual é apenas inicial.",
+   "O Carvedilol deve ser suspenso, pois a paciente está hipotensa.",
+   "O Carvedilol deve ser substituído por Anlodipino, que é mais seguro na IC-FEr."
+  ],
+  "correta": "B",
+  "explicacao": "A titulação do Carvedilol deve ser gradual (dobrar a dose a cada 2–4 semanas) até a dose-alvo ou máxima tolerada, monitorando PA, FC e sintomas.",
+  "erros": {
+   "A": "Incorreta porque a dose atual é baixa.",
+   "C": "Incorreta porque a suspensão não é indicada.",
+   "D": "Incorreta porque o Anlodipino não é betabloqueador."
+  }
+ },
+ {
+  "assunto": "Metformina – vitamina B12",
+  "caso": "Paciente masculino, 60 anos, com Diabetes Mellitus tipo 2 há 8 anos, em uso de Metformina 2.000 mg/dia. Ele comparece à consulta de rotina queixando-se de parestesias em membros inferiores e fadiga. Exames laboratoriais mostram anemia macrocítica e níveis reduzidos de vitamina B12.",
+  "pergunta": "Considerando os efeitos adversos da Metformina e o manejo da deficiência de vitamina B12, assinale a alternativa correta.",
+  "opcoes": [
+   "A Metformina não interfere na absorção de vitamina B12, e a anemia deve ser investigada por outras causas.",
+   "O uso prolongado de Metformina pode reduzir a absorção de vitamina B12, causando deficiência e neuropatia; deve-se monitorar níveis de B12 periodicamente e suplementar se necessário.",
+   "A Metformina aumenta a absorção de vitamina B12, e a anemia é um efeito esperado do fármaco.",
+   "A anemia macrocítica é independente da Metformina e não requer monitorização."
+  ],
+  "correta": "B",
+  "explicacao": "O uso prolongado de Metformina pode reduzir a absorção de vitamina B12, causando deficiência e neuropatia. Deve-se monitorar níveis de B12 e suplementar se necessário.",
+  "erros": {
+   "A": "Incorreta porque interfere.",
+   "C": "Incorreta porque reduz a absorção.",
+   "D": "Incorreta porque a anemia tem relação."
+  }
+ },
+ {
+  "assunto": "Antidiabéticos – GLP-1",
+  "caso": "Paciente feminina, 50 anos, com Diabetes Mellitus tipo 2 e obesidade grau II (IMC = 36 kg/m²), em uso de Liraglutida 1,8 mg/dia. Ela comparece ao pronto-socorro com dor abdominal intensa em faixa, náuseas e vômitos. Exames laboratoriais mostram amilase e lipase elevadas (3 vezes o limite superior).",
+  "pergunta": "Considerando os efeitos adversos dos agonistas GLP-1 e o risco de pancreatite, assinale a alternativa correta.",
+  "opcoes": [
+   "Os agonistas GLP-1 não têm relação com pancreatite, e o quadro deve ser atribuído a outra causa.",
+   "Os agonistas GLP-1 podem estar associados a risco de pancreatite; a conduta é suspender o fármaco, tratar a pancreatite e não reintroduzir a Liraglutida.",
+   "A conduta é aumentar a dose de Liraglutida para melhorar o controle glicêmico e reduzir o risco de pancreatite.",
+   "A pancreatite é um efeito esperado e autolimitado da Liraglutida, não requerendo suspensão."
+  ],
+  "correta": "B",
+  "explicacao": "Os agonistas GLP-1 podem estar associados a risco de pancreatite. A conduta é suspender o fármaco, tratar a pancreatite e não reintroduzir.",
+  "erros": {
+   "A": "Incorreta porque há relação.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer suspensão."
+  }
+ },
+ {
+  "assunto": "iSGLT2 – amputação",
+  "caso": "Paciente masculino, 65 anos, com Diabetes Mellitus tipo 2, em uso de Canagliflozina 300 mg/dia. Ele comparece à consulta de rotina queixando-se de dor e ulceração em pododáctilo do pé direito, de difícil cicatrização.",
+  "pergunta": "Considerando os efeitos adversos dos inibidores de SGLT2 e o risco de amputação, assinale a alternativa correta.",
+  "opcoes": [
+   "A Canagliflozina não tem relação com amputações, e a ulceração deve ser atribuída à neuropatia diabética.",
+   "A Canagliflozina está associada a risco aumentado de amputação de membros inferiores; deve-se monitorar e considerar troca para outro iSGLT2.",
+   "A Canagliflozina reduz o risco de amputação por melhorar a perfusão periférica.",
+   "A conduta é aumentar a dose de Canagliflozina para melhorar o controle glicêmico e a cicatrização."
+  ],
+  "correta": "B",
+  "explicacao": "A Canagliflozina está associada a risco aumentado de amputação de membros inferiores. Deve-se monitorar e considerar troca para outro iSGLT2.",
+  "erros": {
+   "A": "Incorreta porque há relação.",
+   "C": "Incorreta porque não reduz o risco.",
+   "D": "Incorreta porque aumentar a dose piora."
+  }
+ },
+ {
+  "assunto": "Anticolinérgicos – idosos",
+  "caso": "Paciente masculino, 70 anos, com diagnóstico de esquizofrenia, em uso de Haloperidol 5 mg/dia. Ele apresenta tremor de repouso, rigidez muscular e bradicinesia. O médico considera iniciar Biperideno para controle dos sintomas extrapiramidais.",
+  "pergunta": "Considerando os efeitos adversos dos anticolinérgicos em idosos, assinale a alternativa correta.",
+  "opcoes": [
+   "O Biperideno é seguro em idosos e não causa efeitos adversos significativos.",
+   "Os anticolinérgicos podem causar confusão, retenção urinária, constipação e boca seca, especialmente em idosos; devem ser usados com cautela e pelo menor tempo possível, considerando-se redução da dose do antipsicótico ou troca.",
+   "O Biperideno deve ser usado cronicamente em todos os pacientes com Parkinsonismo induzido por antipsicóticos.",
+   "O Biperideno não tem efeitos adversos e pode ser usado sem restrições em idosos."
+  ],
+  "correta": "B",
+  "explicacao": "Os anticolinérgicos (Biperideno) podem causar confusão, retenção urinária, constipação e boca seca, especialmente em idosos. Devem ser usados com cautela e pelo menor tempo possível.",
+  "erros": {
+   "A": "Incorreta porque não é seguro em idosos.",
+   "C": "Incorreta porque não deve ser usado cronicamente.",
+   "D": "Incorreta porque tem efeitos adversos."
+  }
+ },
+ {
+  "assunto": "Antiagregantes – DAPT",
+  "caso": "Paciente masculino, 75 anos, com infarto agudo do miocárdio com supradesnível do segmento ST (IAMCSST), submetido a angioplastia primária com implante de stent farmacológico. Ele recebe Aspirina 100 mg/dia e Ticagrelor 90 mg 12/12h. Após 5 dias, apresenta sangramento gastrointestinal significativo (hematêmese e melena).",
+  "pergunta": "Considerando o manejo da terapia antiplaquetária dupla (DAPT) em pacientes com sangramento maior, assinale a alternativa correta.",
+  "opcoes": [
+   "A DAPT deve ser mantida independentemente do sangramento, pois o risco trombótico do stent supera o risco hemorrágico.",
+   "Em caso de sangramento maior, deve-se considerar suspender ou trocar o inibidor de P2Y12 (ex.: Clopidogrel) e manter Aspirina, além de tratar a causa do sangramento e considerar transfusão se necessário.",
+   "A Aspirina deve ser suspensa e o Ticagrelor mantido, pois o Ticagrelor é mais seguro em pacientes com sangramento.",
+   "A DAPT deve ser suspensa definitivamente, e o paciente deve ser mantido apenas com anticoagulação oral."
+  ],
+  "correta": "B",
+  "explicacao": "Em caso de sangramento maior, deve-se considerar suspender ou trocar o inibidor de P2Y12 (Clopidogrel) e manter Aspirina, além de tratar a causa do sangramento.",
+  "erros": {
+   "A": "Incorreta porque manter a DAPT piora o sangramento.",
+   "C": "Incorreta porque a Aspirina deve ser mantida.",
+   "D": "Incorreta porque a suspensão definitiva não é indicada."
+  }
+ },
+ {
+  "assunto": "Varfarina – interações",
+  "caso": "Paciente masculino, 50 anos, com prótese valvar mecânica, em uso de Varfarina 5 mg/dia, com INR estável entre 2,5 e 3,5. Ele inicia tratamento para tuberculose com Rifampicina, Isoniazida, Pirazinamida e Etambutol. Após 1 semana, comparece ao ambulatório de anticoagulação com INR de 1,2.",
+  "pergunta": "Considerando as interações medicamentosas mediadas pelo sistema CYP450, assinale a alternativa correta.",
+  "opcoes": [
+   "A Rifampicina inibe a CYP2C9, aumentando o INR e o risco de sangramento.",
+   "A Rifampicina induz a CYP2C9 e a glicoproteína-P, aumentando o metabolismo da Varfarina e reduzindo o INR; a conduta é monitorar o INR e ajustar a dose da Varfarina.",
+   "A Rifampicina não interfere no metabolismo da Varfarina, e o INR reduzido deve ser atribuído a erro dietético.",
+   "A Rifampicina aumenta a absorção intestinal da Varfarina, elevando seus níveis plasmáticos e o INR."
+  ],
+  "correta": "B",
+  "explicacao": "A Rifampicina induz a CYP2C9 e a glicoproteína-P, aumentando o metabolismo da Varfarina e reduzindo o INR. Deve-se monitorar e ajustar a dose.",
+  "erros": {
+   "A": "Incorreta porque é indutora.",
+   "C": "Incorreta porque interfere.",
+   "D": "Incorreta porque não aumenta a absorção."
+  }
+ },
+ {
+  "assunto": "Levotiroxina – absorção",
+  "caso": "Paciente feminina, 60 anos, com hipotireoidismo primário, em uso de Levotiroxina 100 µg/dia em jejum. Ela inicia tratamento com Omeprazol 40 mg/dia para doença do refluxo gastroesofágico. Após 2 meses, comparece à consulta de endocrinologia queixando-se de cansaço e ganho de peso. Exames laboratoriais mostram TSH = 6,5 mUI/L (VR: 0,4–4,5).",
+  "pergunta": "Considerando a interação entre inibidores de bomba de prótons e Levotiroxina, assinale a alternativa correta.",
+  "opcoes": [
+   "O Omeprazol aumenta a absorção da Levotiroxina, e o TSH elevado indica necessidade de reduzir a dose.",
+   "O Omeprazol reduz a acidez gástrica, diminuindo a absorção da Levotiroxina; a conduta é separar a administração (Levotiroxina em jejum, Omeprazol à noite) ou ajustar a dose da Levotiroxina.",
+   "O Omeprazol não interfere na absorção da Levotiroxina, e o TSH elevado indica progressão do hipotireoidismo.",
+   "A Levotiroxina deve ser suspensa, pois o Omeprazol é contraindicação absoluta ao seu uso."
+  ],
+  "correta": "B",
+  "explicacao": "O Omeprazol reduz a acidez gástrica, diminuindo a absorção da Levotiroxina. Deve-se separar a administração ou ajustar a dose.",
+  "erros": {
+   "A": "Incorreta porque reduz a absorção.",
+   "C": "Incorreta porque interfere.",
+   "D": "Incorreta porque a suspensão da Levotiroxina não é indicada."
+  }
+ },
+ {
+  "assunto": "Dipirona – via intravenosa",
+  "caso": "Paciente masculino, 40 anos, com dor pós-operatória, recebe Dipirona 2 g por via intravenosa rapidamente. Minutos após a administração, apresenta hipotensão arterial (PA = 80/50 mmHg), rubor facial, sudorese e sensação de mal-estar.",
+  "pergunta": "Considerando os efeitos adversos da Dipirona intravenosa e as recomendações de administração, assinale a alternativa correta.",
+  "opcoes": [
+   "A Dipirona intravenosa não causa hipotensão, e o quadro deve ser atribuído a outra causa.",
+   "A administração rápida de Dipirona intravenosa pode causar hipotensão e reações anafiláticas; deve-se infundir lentamente (diluída) e monitorar o paciente.",
+   "A hipotensão é um efeito esperado e autolimitado da Dipirona intravenosa, não requerendo cuidados.",
+   "A Dipirona intravenosa é segura em qualquer velocidade de infusão, e a hipotensão é um efeito raro."
+  ],
+  "correta": "B",
+  "explicacao": "A administração rápida de Dipirona IV pode causar hipotensão e reações anafiláticas. Deve-se infundir lentamente e monitorar.",
+  "erros": {
+   "A": "Incorreta porque pode causar hipotensão.",
+   "C": "Incorreta porque requer cuidado.",
+   "D": "Incorreta porque não é segura em qualquer velocidade."
+  }
+ },
+ {
+  "assunto": "iSGLT2 – cetoacidose euglicêmica",
+  "caso": "Paciente feminina, 45 anos, com Diabetes Mellitus tipo 2, em uso de Empagliflozina 25 mg/dia. Ela comparece ao pronto-socorro com náuseas, vômitos e dor abdominal difusa há 2 dias. Exames laboratoriais mostram glicemia = 180 mg/dL, pH = 7,20, bicarbonato = 12 mEq/L e cetonúria ++++.",
+  "pergunta": "Considerando os efeitos adversos dos inibidores de SGLT2 e o diagnóstico de cetoacidose diabética euglicêmica, assinale a alternativa correta.",
+  "opcoes": [
+   "O quadro é compatível com cetoacidose diabética euglicêmica; a conduta é suspender a Empagliflozina, hidratar, administrar insulina e corrigir distúrbios eletrolíticos.",
+   "O quadro é compatível com acidose lática, e a conduta é administrar bicarbonato e suspender a Metformina.",
+   "A Empagliflozina deve ser mantida, pois a glicemia está controlada e não há risco de cetoacidose.",
+   "O quadro é compatível com hipoglicemia grave, e a conduta é administrar glicose intravenosa."
+  ],
+  "correta": "A",
+  "explicacao": "O quadro é compatível com cetoacidose diabética euglicêmica. A conduta é suspender a Empagliflozina, hidratar, administrar insulina e corrigir distúrbios.",
+  "erros": {
+   "B": "Incorreta porque não é acidose lática.",
+   "C": "Incorreta porque manter piora.",
+   "D": "Incorreta porque a glicemia está normal."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – clozapina",
+  "caso": "Paciente masculino, 35 anos, com diagnóstico de esquizofrenia refratária, inicia tratamento com Clozapina 300 mg/dia. Após 2 meses, comparece ao pronto-socorro com febre, odinofagia e prostração. Hemograma revela neutrófilos = 800/mm³.",
+  "pergunta": "Considerando os efeitos adversos hematológicos da Clozapina e as recomendações de monitorização, assinale a alternativa correta.",
+  "opcoes": [
+   "A Clozapina não causa agranulocitose, e o quadro deve ser atribuído a infecção viral.",
+   "A Clozapina pode causar agranulocitose; é obrigatória a monitorização semanal do hemograma nas primeiras 18 semanas; a conduta é suspender a Clozapina e tratar a infecção.",
+   "A conduta é aumentar a dose de Clozapina para melhorar o controle dos sintomas psicóticos e, consequentemente, a agranulocitose.",
+   "A agranulocitose é um efeito esperado e autolimitado da Clozapina, não requerendo suspensão."
+  ],
+  "correta": "B",
+  "explicacao": "A Clozapina pode causar agranulocitose. É obrigatória a monitorização semanal do hemograma nas primeiras 18 semanas. A conduta é suspender a Clozapina e tratar a infecção.",
+  "erros": {
+   "A": "Incorreta porque causa agranulocitose.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer suspensão."
+  }
+ },
+ {
+  "assunto": "Anticonvulsivantes – hepatotoxicidade",
+  "caso": "Paciente feminina, 30 anos, com epilepsia mioclônica juvenil, em uso de Ácido Valproico 1.500 mg/dia. Ela comparece à consulta de rotina queixando-se de icterícia, náuseas e mal-estar. Exames laboratoriais mostram AST = 500 U/L, ALT = 600 U/L e bilirrubinas elevadas.",
+  "pergunta": "Considerando os efeitos adversos do Ácido Valproico e o risco de hepatotoxicidade, assinale a alternativa correta.",
+  "opcoes": [
+   "O Ácido Valproico não causa hepatotoxicidade, e a elevação de transaminases deve ser atribuída a outra causa.",
+   "O Ácido Valproico pode causar hepatotoxicidade grave, especialmente em crianças menores de 2 anos e em pacientes com doenças metabólicas; a conduta é suspender o fármaco e investigar outras causas.",
+   "A conduta é aumentar a dose de Ácido Valproico para melhorar o controle das crises e, consequentemente, a função hepática.",
+   "A hepatotoxicidade é um efeito esperado e autolimitado do Ácido Valproico, não requerendo suspensão."
+  ],
+  "correta": "B",
+  "explicacao": "O Ácido Valproico pode causar hepatotoxicidade grave. A conduta é suspender o fármaco e investigar outras causas.",
+  "erros": {
+   "A": "Incorreta porque causa hepatotoxicidade.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer suspensão."
+  }
+ },
+ {
+  "assunto": "IC-FEr – hipercalemia",
+  "caso": "Paciente masculino, 70 anos, com insuficiência cardíaca com fração de ejeção reduzida (IC-FEr) e doença renal crônica, em uso de Enalapril 20 mg 12/12h e Espironolactona 25 mg/dia. Exames laboratoriais mostram potássio sérico de 6,0 mEq/L e creatinina de 2,0 mg/dL (TFG = 35 mL/min/1,73m²).",
+  "pergunta": "Considerando o risco de hipercalemia associado à associação de IECA e antagonistas mineralocorticoides, assinale a alternativa correta.",
+  "opcoes": [
+   "A associação de IECA e Espironolactona não causa hipercalemia, e o potássio elevado deve ser atribuído a outra causa.",
+   "A associação de IECA e Espironolactona aumenta o risco de hipercalemia, especialmente em pacientes com doença renal crônica; a conduta é suspender ou reduzir a Espironolactona e monitorar potássio e função renal.",
+   "A conduta é aumentar a dose de Enalapril para melhorar a função renal e reduzir o potássio.",
+   "A hipercalemia é um efeito esperado e benigno da associação, não requerendo intervenção."
+  ],
+  "correta": "B",
+  "explicacao": "A associação de IECA e Espironolactona aumenta o risco de hipercalemia, especialmente em DRC. A conduta é suspender ou reduzir a Espironolactona e monitorar K e função renal.",
+  "erros": {
+   "A": "Incorreta porque causa hipercalemia.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer intervenção."
+  }
+ },
+ {
+  "assunto": "Espironolactona – ginecomastia",
+  "caso": "Paciente masculino, 60 anos, com insuficiência cardíaca com fração de ejeção reduzida (IC-FEr), em uso de Espironolactona 50 mg/dia. Ele comparece à consulta de rotina queixando-se de aumento do volume mamário e dor mamária bilateral.",
+  "pergunta": "Considerando os efeitos adversos antiandrogênicos da Espironolactona, assinale a alternativa correta.",
+  "opcoes": [
+   "A Espironolactona não causa ginecomastia, e o quadro deve ser investigado por outras causas.",
+   "A Espironolactona pode causar ginecomastia e dor mamária por efeito antiandrogênico; a conduta é reduzir a dose ou trocar para Eplerenona, que tem menor afinidade pelos receptores androgênicos.",
+   "A conduta é aumentar a dose de Espironolactona para melhorar o controle da IC e, consequentemente, reduzir a ginecomastia.",
+   "A ginecomastia é um efeito esperado e benigno da Espironolactona, não requerendo intervenção."
+  ],
+  "correta": "B",
+  "explicacao": "A Espironolactona pode causar ginecomastia por efeito antiandrogênico. A conduta é reduzir a dose ou trocar para Eplerenona.",
+  "erros": {
+   "A": "Incorreta porque causa ginecomastia.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer intervenção."
+  }
+ },
+ {
+  "assunto": "Vasopressores e inotrópicos",
+  "caso": "Paciente masculino, 65 anos, com insuficiência cardíaca descompensada, recebe infusão intravenosa de Dobutamina 5 µg/kg/min. Após 2 horas, apresenta taquicardia (FC = 130 bpm) e extrassístoles ventriculares frequentes no monitor cardíaco.",
+  "pergunta": "Considerando os efeitos adversos da Dobutamina e o manejo da infusão, assinale a alternativa correta.",
+  "opcoes": [
+   "A Dobutamina não causa arritmias, e o quadro deve ser atribuído à progressão da IC.",
+   "A Dobutamina é um agonista β1 que aumenta a contratilidade e a frequência cardíaca, podendo causar arritmias; a conduta é monitorar o ECG, reduzir a dose ou suspender a infusão se necessário.",
+   "A conduta é aumentar a dose de Dobutamina para melhorar o débito cardíaco e, consequentemente, reduzir as arritmias.",
+   "A Dobutamina é segura em qualquer dose e não requer monitorização cardíaca."
+  ],
+  "correta": "B",
+  "explicacao": "A Dobutamina é um agonista β1 que aumenta a contratilidade e a FC, podendo causar arritmias. Deve-se monitorar ECG e ajustar a dose.",
+  "erros": {
+   "A": "Incorreta porque causa arritmias.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque não é segura em qualquer dose."
+  }
+ },
+ {
+  "assunto": "Varfarina – cirurgia",
+  "caso": "Paciente feminina, 70 anos, com prótese valvar mecânica, em uso de Varfarina 7,5 mg/dia, com INR estável entre 2,5 e 3,5. Ela é admitida com quadro de apendicite aguda e necessita de cirurgia de emergência.",
+  "pergunta": "Considerando o manejo da anticoagulação em cirurgias de emergência, assinale a alternativa correta.",
+  "opcoes": [
+   "A Varfarina deve ser mantida, pois o risco trombótico da prótese mecânica supera o risco hemorrágico da cirurgia.",
+   "Em cirurgias de emergência, deve-se reverter a anticoagulação com vitamina K e/ou complexo protrombínico, e considerar heparina não fracionada ou de baixo peso molecular no pós-operatório, com reintrodução da Varfarina assim que possível.",
+   "A Varfarina deve ser suspensa 30 dias antes da cirurgia, independentemente da urgência.",
+   "A Varfarina não interfere no risco cirúrgico, e a paciente pode ser operada sem ajuste da anticoagulação."
+  ],
+  "correta": "B",
+  "explicacao": "Em cirurgias de emergência, deve-se reverter a anticoagulação com vitamina K e/ou complexo protrombínico, e considerar heparina não fracionada ou de baixo peso molecular no pós-operatório.",
+  "erros": {
+   "A": "Incorreta porque manter a Varfarina aumenta o risco hemorrágico.",
+   "C": "Incorreta porque 30 dias é excessivo.",
+   "D": "Incorreta porque a Varfarina interfere em cirurgias."
+  }
+ },
+ {
+  "assunto": "Metformina – hipoglicemia",
+  "caso": "Paciente masculino, 55 anos, com Diabetes Mellitus tipo 2, em uso de Metformina 2.000 mg/dia. Ele comparece ao pronto-socorro com quadro de sudorese, tremores e confusão mental. Glicemia capilar é de 50 mg/dL. Ele nega uso de insulina ou sulfonilureias, mas relata que consumiu álcool em excesso na noite anterior e praticou exercício físico intenso.",
+  "pergunta": "Considerando o risco de hipoglicemia associado à Metformina e os fatores precipitantes, assinale a alternativa correta.",
+  "opcoes": [
+   "A Metformina causa hipoglicemia grave, e a conduta é suspender o fármaco definitivamente.",
+   "A Metformina isolada raramente causa hipoglicemia; a hipoglicemia deve ser investigada (ex.: uso de sulfonilureia, insulina, álcool, exercício intenso, insuficiência renal ou hepática).",
+   "A Metformina deve ser suspensa, pois a hipoglicemia é um efeito esperado e frequente do fármaco.",
+   "A hipoglicemia é um sinal de que a dose de Metformina está insuficiente, e a conduta é aumentar a dose."
+  ],
+  "correta": "B",
+  "explicacao": "A Metformina isolada raramente causa hipoglicemia. A hipoglicemia deve ser investigada (uso de sulfonilureia, insulina, álcool, exercício intenso).",
+  "erros": {
+   "A": "Incorreta porque não causa hipoglicemia grave.",
+   "C": "Incorreta porque a suspensão não é indicada.",
+   "D": "Incorreta porque não é efeito esperado."
+  }
+ },
+ {
+  "assunto": "Benzodiazepínicos – idosos",
+  "caso": "Paciente masculino, 80 anos, internado por fratura de fêmur, recebe Midazolam 5 mg por via intravenosa para realização de procedimento ortopédico. Após o procedimento, apresenta confusão mental, desorientação e alucinações visuais.",
+  "pergunta": "Considerando os efeitos adversos dos benzodiazepínicos em idosos e o diagnóstico diferencial de delirium, assinale a alternativa correta.",
+  "opcoes": [
+   "O Midazolam não causa delirium em idosos, e o quadro deve ser atribuído à demência.",
+   "O Midazolam pode causar delirium em idosos; a conduta é suspender ou reduzir a dose do benzodiazepínico e tratar a causa base (dor, infecção, distúrbios metabólicos).",
+   "A conduta é aumentar a dose de Midazolam para controlar a agitação e as alucinações.",
+   "O delirium é um efeito esperado e benigno do Midazolam em idosos, não requerendo intervenção."
+  ],
+  "correta": "B",
+  "explicacao": "O Midazolam pode causar delirium em idosos. A conduta é suspender ou reduzir a dose e tratar a causa base.",
+  "erros": {
+   "A": "Incorreta porque causa delirium.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer intervenção."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – SNM",
+  "caso": "Paciente feminina, 45 anos, com diagnóstico de esquizofrenia, em uso de Haloperidol 10 mg/dia. Ela é trazida ao pronto-socorro com quadro de febre alta (40°C), rigidez muscular generalizada, alteração do nível de consciência, taquicardia e instabilidade autonômica. Exames laboratoriais mostram CK = 10.000 U/L.",
+  "pergunta": "Considerando o diagnóstico e o tratamento da Síndrome Neuroléptica Maligna, assinale a alternativa correta.",
+  "opcoes": [
+   "O tratamento inclui suspender o antipsicótico, administrar Dantrolene e Bromocriptina, e fornecer suporte intensivo com monitorização hemodinâmica e correção de distúrbios eletrolíticos.",
+   "O tratamento é aumentar a dose de Haloperidol para controlar os sintomas psicóticos e, consequentemente, a febre.",
+   "O tratamento é administrar Flumazenil para reverter os efeitos do antipsicótico.",
+   "O tratamento é administrar Biperideno IM para reverter a rigidez muscular."
+  ],
+  "correta": "A",
+  "explicacao": "O tratamento da SNM inclui suspender o antipsicótico, administrar Dantrolene e Bromocriptina, e suporte intensivo.",
+  "erros": {
+   "B": "Incorreta porque aumentar a dose piora.",
+   "C": "Incorreta porque o Flumazenil não é indicado.",
+   "D": "Incorreta porque o Biperideno não é tratamento da SNM."
+  }
+ },
+ {
+  "assunto": "Antiagregantes – DAPT",
+  "caso": "Paciente masculino, 60 anos, com infarto agudo do miocárdio com supradesnível do segmento ST (IAMCSST), submetido a angioplastia com implante de stent farmacológico. Ele recebe Aspirina 100 mg/dia e Ticagrelor 90 mg 12/12h.",
+  "pergunta": "Considerando a duração recomendada da terapia antiplaquetária dupla (DAPT) após stent farmacológico, assinale a alternativa correta.",
+  "opcoes": [
+   "A DAPT deve ser mantida por apenas 1 mês após o stent farmacológico.",
+   "A DAPT (Aspirina + inibidor de P2Y12) deve ser mantida por pelo menos 6–12 meses após stent farmacológico, conforme risco trombótico e hemorrágico do paciente.",
+   "A DAPT deve ser suspensa após 7 dias, pois o risco de sangramento supera o benefício.",
+   "A Aspirina isolada é suficiente após 1 mês de DAPT."
+  ],
+  "correta": "B",
+  "explicacao": "A DAPT (Aspirina + inibidor de P2Y12) deve ser mantida por pelo menos 6–12 meses após stent farmacológico, conforme risco trombótico e hemorrágico.",
+  "erros": {
+   "A": "Incorreta porque 1 mês é insuficiente.",
+   "C": "Incorreta porque 7 dias é insuficiente.",
+   "D": "Incorreta porque a Aspirina isolada não é suficiente."
+  }
+ },
+ {
+  "assunto": "Estatinas – glicemia",
+  "caso": "Paciente feminina, 60 anos, com Diabetes Mellitus tipo 2, em uso de Atorvastatina 40 mg/dia para prevenção cardiovascular. Ela comparece à consulta de rotina com HbA1c = 8,0% (antes 7,0%). Ela nega mudanças na dieta ou atividade física e não iniciou outros medicamentos.",
+  "pergunta": "Considerando os efeitos das estatinas sobre o metabolismo glicêmico, assinale a alternativa correta.",
+  "opcoes": [
+   "As estatinas não interferem no controle glicêmico, e a elevação da HbA1c deve ser atribuída à progressão do diabetes.",
+   "As estatinas podem aumentar levemente a glicemia e o risco de diabetes; no entanto, o benefício cardiovascular supera o risco, e a estatina deve ser mantida, com otimização do controle glicêmico.",
+   "A Atorvastatina deve ser suspensa imediatamente, pois a hiperglicemia é uma contraindicação absoluta ao seu uso.",
+   "A Atorvastatina deve ser aumentada para melhorar o controle lipídico e, consequentemente, o controle glicêmico."
+  ],
+  "correta": "B",
+  "explicacao": "As estatinas podem aumentar levemente a glicemia e o risco de diabetes. No entanto, o benefício cardiovascular supera o risco, e a estatina deve ser mantida.",
+  "erros": {
+   "A": "Incorreta porque interferem no controle glicêmico.",
+   "C": "Incorreta porque a suspensão não é indicada.",
+   "D": "Incorreta porque aumentar a dose não é necessário."
+  }
+ },
+ {
+  "assunto": "iSGLT2 – estresse agudo",
+  "caso": "Paciente masculino, 70 anos, com Diabetes Mellitus tipo 2 e insuficiência cardíaca, em uso de Dapagliflozina 10 mg/dia. Ele apresenta quadro de diarreia e vômitos há 2 dias, com sinais de desidratação.",
+  "pergunta": "Considerando os riscos dos inibidores de SGLT2 em situações de estresse agudo, assinale a alternativa correta.",
+  "opcoes": [
+   "A Dapagliflozina deve ser mantida durante o quadro de desidratação, pois não há risco de complicações.",
+   "Em situações de desidratação ou estresse agudo, a Dapagliflozina deve ser suspensa temporariamente para evitar cetoacidose e piora da função renal; deve-se reintroduzir após estabilização clínica.",
+   "A Dapagliflozina deve ser aumentada para melhorar a diurese e corrigir a desidratação.",
+   "A Dapagliflozina não tem relação com desidratação ou cetoacidose."
+  ],
+  "correta": "B",
+  "explicacao": "Em situações de desidratação ou estresse agudo, a Dapagliflozina deve ser suspensa temporariamente para evitar cetoacidose e piora da função renal.",
+  "erros": {
+   "A": "Incorreta porque manter piora.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque há relação com desidratação."
+  }
+ },
+ {
+  "assunto": "Anticonvulsivantes – contraceptivos",
+  "caso": "Paciente feminina, 25 anos, com diagnóstico de epilepsia focal, em uso de Carbamazepina 600 mg/dia. Ela inicia uso de contraceptivo oral combinado. Após 3 meses, apresenta sangramento de escape e suspeita de falha contraceptiva.",
+  "pergunta": "Considerando as interações medicamentosas entre anticonvulsivantes indutores enzimáticos e contraceptivos orais, assinale a alternativa correta.",
+  "opcoes": [
+   "A Carbamazepina não interfere na eficácia dos contraceptivos orais.",
+   "A Carbamazepina induz enzimas hepáticas (CYP3A4), aumentando o metabolismo dos contraceptivos orais e reduzindo sua eficácia; deve-se usar método contraceptivo adicional ou considerar alternativa anticonvulsivante.",
+   "A Carbamazepina aumenta a eficácia do contraceptivo oral, e o sangramento de escape é um efeito esperado.",
+   "A Carbamazepina deve ser suspensa, pois é contraindicação absoluta ao uso de contraceptivos orais."
+  ],
+  "correta": "B",
+  "explicacao": "A Carbamazepina induz enzimas hepáticas (CYP3A4), aumentando o metabolismo dos contraceptivos orais e reduzindo sua eficácia. Deve-se usar método contraceptivo adicional.",
+  "erros": {
+   "A": "Incorreta porque interfere.",
+   "C": "Incorreta porque reduz a eficácia.",
+   "D": "Incorreta porque a suspensão não é indicada."
+  }
+ },
+ {
+  "assunto": "Antidepressivos – venlafaxina",
+  "caso": "Paciente masculino, 50 anos, com diagnóstico de transtorno depressivo maior, em uso de Venlafaxina 225 mg/dia. Ele comparece à consulta de rotina queixando-se de cefaleia e apresenta PA = 160/100 mmHg. Ele nega histórico prévio de hipertensão arterial.",
+  "pergunta": "Considerando os efeitos adversos da Venlafaxina em doses altas, assinale a alternativa correta.",
+  "opcoes": [
+   "A Venlafaxina não interfere na pressão arterial, e a hipertensão deve ser investigada por outras causas.",
+   "A Venlafaxina em doses altas (&gt; 150 mg/dia) pode causar hipertensão; a conduta é monitorar a PA, reduzir a dose ou trocar para outro antidepressivo com menor efeito adrenérgico.",
+   "A Venlafaxina reduz a pressão arterial, e a hipertensão é um efeito paradoxal raro.",
+   "A conduta é aumentar a dose de Venlafaxina para melhorar o controle da depressão e, consequentemente, reduzir a pressão arterial."
+  ],
+  "correta": "B",
+  "explicacao": "A Venlafaxina em doses altas pode causar hipertensão. A conduta é monitorar PA, reduzir a dose ou trocar para outro antidepressivo.",
+  "erros": {
+   "A": "Incorreta porque interfere na PA.",
+   "C": "Incorreta porque aumenta a PA.",
+   "D": "Incorreta porque aumentar a dose piora."
+  }
+ },
+ {
+  "assunto": "Antipsicóticos – quetiapina",
+  "caso": "Paciente feminina, 30 anos, com diagnóstico de esquizofrenia, em uso de Quetiapina 300 mg/dia. Ela comparece à consulta de rotina queixando-se de sonolência excessiva durante o dia, com prejuízo no trabalho e nas atividades diárias.",
+  "pergunta": "Considerando os efeitos adversos da Quetiapina e as estratégias de manejo, assinale a alternativa correta.",
+  "opcoes": [
+   "A Quetiapina não causa sonolência, e o quadro deve ser atribuído à má qualidade do sono.",
+   "A Quetiapina tem efeito sedativo por bloqueio H1; a conduta é ajustar a dose ou horário (maior parte à noite) e considerar troca para antipsicótico com menor efeito sedativo, se necessário.",
+   "A conduta é aumentar a dose de Quetiapina para melhorar o controle dos sintomas psicóticos e, consequentemente, reduzir a sonolência.",
+   "A sonolência é um efeito esperado e benigno da Quetiapina, não requerendo intervenção."
+  ],
+  "correta": "B",
+  "explicacao": "A Quetiapina tem efeito sedativo por bloqueio H1. A conduta é ajustar a dose ou horário (maior parte à noite) e considerar troca se necessário.",
+  "erros": {
+   "A": "Incorreta porque causa sonolência.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer intervenção."
+  }
+ },
+ {
+  "assunto": "Varfarina – interações",
+  "caso": "Paciente masculino, 55 anos, com fibrilação atrial, em uso de Varfarina 5 mg/dia, com INR estável entre 2,0 e 3,0. Ele comparece ao ambulatório de anticoagulação com INR de 5,0. Relata que aumentou o consumo de álcool nas últimas semanas, ingerindo cerca de 4 doses de destilados por dia.",
+  "pergunta": "Considerando a interação entre álcool e Varfarina, assinale a alternativa correta.",
+  "opcoes": [
+   "O álcool não interfere no INR, e o valor elevado deve ser atribuído a erro dietético.",
+   "O consumo agudo de álcool inibe o metabolismo da Varfarina, aumentando o INR e o risco de sangramento; a conduta é orientar abstinência, monitorar o INR e ajustar a dose da Varfarina.",
+   "O álcool reduz o INR por induzir o metabolismo da Varfarina.",
+   "O álcool aumenta a excreção renal da Varfarina, reduzindo seus níveis plasmáticos e o INR."
+  ],
+  "correta": "B",
+  "explicacao": "O consumo agudo de álcool inibe o metabolismo da Varfarina, aumentando o INR e o risco de sangramento. A conduta é orientar abstinência e monitorar INR.",
+  "erros": {
+   "A": "Incorreta porque interfere.",
+   "C": "Incorreta porque aumenta o INR.",
+   "D": "Incorreta porque não aumenta a excreção."
+  }
+ },
+ {
+  "assunto": "Sulfonilureias – hipoglicemia",
+  "caso": "Paciente feminina, 75 anos, com Diabetes Mellitus tipo 2, em uso de Glimepirida 4 mg/dia. Ela comparece ao pronto-socorro trazida pela filha, que relata que a paciente apresentou episódios de sudorese, tremores, confusão mental e sonolência nas últimas 24 horas. Glicemia capilar é de 35 mg/dL.",
+  "pergunta": "Considerando o risco de hipoglicemia associado às sulfonilureias em idosos, assinale a alternativa correta.",
+  "opcoes": [
+   "A Glimepirida não causa hipoglicemia, e o quadro deve ser atribuído a outra causa.",
+   "As sulfonilureias causam hipoglicemia por aumento da secreção de insulina; em idosos, o risco é maior; a conduta é reduzir ou substituir por fármaco com menor risco (ex.: DPP-4, iSGLT2, GLP-1).",
+   "A hipoglicemia é um efeito esperado e autolimitado da Glimepirida, não requerendo ajuste terapêutico.",
+   "A conduta é aumentar a dose de Glimepirida para melhorar o controle glicêmico e evitar episódios futuros de hipoglicemia."
+  ],
+  "correta": "B",
+  "explicacao": "As sulfonilureias causam hipoglicemia por aumento da secreção de insulina. Em idosos, o risco é maior. A conduta é reduzir ou substituir por fármaco com menor risco (DPP-4, iSGLT2, GLP-1).",
+  "erros": {
+   "A": "Incorreta porque causa hipoglicemia.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer intervenção."
+  }
+ },
+ {
+  "assunto": "Opioides – depressão respiratória",
+  "caso": "Paciente masculino, 60 anos, com dor intensa pós-operatória, recebe Morfina 10 mg por via intravenosa. Após 30 minutos, apresenta depressão respiratória (frequência respiratória = 8 irpm), sedação profunda e miose puntiforme.",
+  "pergunta": "Considerando os efeitos adversos dos opioides e o manejo da depressão respiratória, assinale a alternativa correta.",
+  "opcoes": [
+   "A Morfina não causa depressão respiratória, e o quadro deve ser atribuído a outra causa.",
+   "A Morfina causa depressão respiratória por ação nos receptores μ; a conduta é administrar Naloxona (antagonista opioide) e monitorar a respiração e a saturação de oxigênio.",
+   "A conduta é aumentar a dose de Morfina para melhorar a analgesia e, consequentemente, reduzir a depressão respiratória.",
+   "A depressão respiratória é um efeito esperado e benigno da Morfina, não requerendo intervenção."
+  ],
+  "correta": "B",
+  "explicacao": "A Morfina causa depressão respiratória por ação nos receptores μ. A conduta é administrar Naloxona e monitorar.",
+  "erros": {
+   "A": "Incorreta porque causa depressão respiratória.",
+   "C": "Incorreta porque aumentar a dose piora.",
+   "D": "Incorreta porque requer intervenção."
+  }
+ }
+];
+
+/* =====================================================================
+   MOTOR (não precisa editar daqui para baixo)
+   ===================================================================== */
+const LETTERS = ["A","B","C","D","E"];
+const BANK_KEY = "simulado-av1-banco";
+
+function toIdx(v){
+  if(typeof v==="number" && Number.isInteger(v)) return v;
+  if(typeof v==="string"){
+    const t=v.trim().toUpperCase();
+    if(/^[A-E]$/.test(t)) return LETTERS.indexOf(t);
+    if(/^\d+$/.test(t)) return +t;
+  }
+  return -1;
+}
+function normalizar(lista){
+  if(!Array.isArray(lista) || !lista.length) throw new Error("Nenhuma questão encontrada no arquivo.");
+  return lista.map((q,k)=>{
+    const n=k+1;
+    if(!q || typeof q!=="object") throw new Error(`Questão ${n}: formato inválido.`);
+    const opcoes = q.opcoes || q.alternativas;
+    if(!Array.isArray(opcoes) || opcoes.length<2 || opcoes.length>5) throw new Error(`Questão ${n}: use de 2 a 5 alternativas em "opcoes".`);
+    const correta = toIdx(q.correta ?? q.gabarito);
+    if(correta<0 || correta>=opcoes.length) throw new Error(`Questão ${n}: "correta" deve ser uma letra de A a ${LETTERS[opcoes.length-1]}.`);
+    if(!q.caso && !q.pergunta) throw new Error(`Questão ${n}: falta "caso" ou "pergunta".`);
+    const erros={};
+    if(q.erros && typeof q.erros==="object"){
+      for(const [key,val] of Object.entries(q.erros)){
+        const i=toIdx(key);
+        if(i>=0 && i<opcoes.length && i!==correta && val) erros[i]=String(val);
+      }
+    }
+    return {
+      assunto:String(q.assunto || q.tema || "Geral"),
+      caso:String(q.caso||""), pergunta:String(q.pergunta||""),
+      opcoes:opcoes.map(String), correta,
+      pista:String(q.pista||""), conceito:String(q.conceito||""), explicacao:String(q.explicacao||""),
+      raciocinio: Array.isArray(q.raciocinio) ? q.raciocinio.map(String) : (q.raciocinio ? [String(q.raciocinio)] : []),
+      erros, figura:String(q.figura||""), imagem:String(q.imagem||""), legenda:String(q.legenda||"")
+    };
+  });
+}
+function hashStr(str){ let h=2166136261; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return (h>>>0).toString(36); }
+
+let CFG = Object.assign({}, CONFIG), BANCO, PERSONALIZADO = false, ERRO_BANCO = "";
+try{
+  const raw = localStorage.getItem(BANK_KEY);
+  if(raw){ const d=JSON.parse(raw); BANCO=normalizar(d.questoes); CFG=Object.assign({},CONFIG,d.config||{}); PERSONALIZADO=true; }
+}catch(e){ BANCO=null; PERSONALIZADO=false; }
+if(!BANCO){
+  try{ BANCO = normalizar(BANCO_PADRAO); }
+  catch(e){ ERRO_BANCO = e.message; BANCO = normalizar([{assunto:"Erro",pergunta:"O banco de questões padrão tem um erro: "+e.message,opcoes:["Ok","Ok"],correta:"A"}]); }
+}
+const BANK_HASH = hashStr(JSON.stringify(BANCO));
+
+/* ordem: embaralhada de forma estável, evitando o mesmo assunto em sequência */
+function ordenar(){
+  const idx = BANCO.map((_,i)=>i);
+  if(CFG.embaralhar===false) return idx;
+  let seed = parseInt(BANK_HASH,36) || 1;
+  const rnd = ()=>{ seed=(Math.imul(seed,1103515245)+12345)>>>0; return (seed>>>1)/0x7fffffff; };
+  for(let tent=0; tent<60; tent++){
+    const pool=idx.slice(), out=[];
+    while(pool.length){
+      const prev = out.length ? BANCO[out[out.length-1]].assunto : null;
+      let c = pool.filter(i=>BANCO[i].assunto!==prev);
+      if(!c.length) c = pool;
+      const pick = c[Math.floor(rnd()*c.length)];
+      out.push(pick); pool.splice(pool.indexOf(pick),1);
+    }
+    const ok = out.every((x,k)=>k===0 || BANCO[x].assunto!==BANCO[out[k-1]].assunto);
+    if(ok || tent===59) return out;
+  }
+  return idx;
+}
+const QUESTIONS = ordenar().map(i=>BANCO[i]);
+
+/* =====================================================================
+   ESTADO E PERSISTÊNCIA
+   ===================================================================== */
+const KEY = "simulado-av1-" + BANK_HASH;
+const ALL = QUESTIONS.map((_,i)=>i);
+
+function freshState(){ return { set:ALL.slice(), answers:{}, pos:0, view:"start", mode:"full", mapFilter:"all" }; }
+let S = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return freshState();
+    const d = JSON.parse(raw);
+    if(!d || !Array.isArray(d.set) || !d.set.length || d.set.some(i=>typeof i!=="number"||i<0||i>=QUESTIONS.length)) return freshState();
+    const st = Object.assign(freshState(), d);
+    st.pos = Math.min(Math.max(0, st.pos|0), st.set.length-1);
+    return st;
+  }catch(e){ return freshState(); }
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+const isAnswered = id => Object.prototype.hasOwnProperty.call(S.answers, id);
+const isRight = id => isAnswered(id) && S.answers[id] === QUESTIONS[id].correta;
+function tally(){
+  let ok=0, err=0, blank=0;
+  S.set.forEach(id=>{ if(!isAnswered(id)) blank++; else if(isRight(id)) ok++; else err++; });
+  return {ok,err,blank,total:S.set.length};
+}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const vStart=$("#vStart"), vQuiz=$("#vQuiz"), vResult=$("#vResult"), topbar=$("#topbar");
+
+function render(){
+  vStart.hidden = S.view!=="start";
+  vQuiz.hidden = S.view!=="quiz";
+  vResult.hidden = S.view!=="result";
+  topbar.hidden = S.view==="start";
+  if(S.view==="start") renderStart();
+  if(S.view==="quiz") renderQuiz();
+  if(S.view==="result") renderResult();
+  renderChrome();
+  save();
+}
+
+function renderStart(){
+  const answered = Object.keys(S.answers).length;
+  $("#sTotal").textContent = QUESTIONS.length;
+  $("#sDone").textContent = answered;
+  const hasProgress = answered>0 || S.pos>0 || S.mode!=="full";
+  $("#btnStart").textContent = hasProgress ? "Continuar" : "Iniciar";
+  $("#btnFresh").hidden = !hasProgress;
+  const setTxt=(sel,txt)=>{ const el=$(sel); el.textContent=txt||""; el.hidden=!txt; };
+  setTxt("#cArea", CFG.area); setTxt("#cTitulo", CFG.titulo || "Simulado");
+  setTxt("#cAutor", CFG.autor ? "por "+CFG.autor : ""); setTxt("#cDesc", CFG.descricao);
+  document.title = CFG.titulo || "Simulado";
+  const ns=[...new Set(QUESTIONS.map(q=>q.opcoes.length))];
+  $("#sAlt").textContent = ns.length===1 ? ns[0] : Math.min(...ns)+"–"+Math.max(...ns);
+  const maxN=Math.max(...ns);
+  $("#keysAns").innerHTML = LETTERS.slice(0,maxN).map(l=>`<kbd>${l}</kbd>`).join(" ")+" responder";
+  $("#bankLabel").textContent = PERSONALIZADO ? "Banco carregado de arquivo." : "Banco padrão do arquivo.";
+  $("#btnDefault").hidden = !PERSONALIZADO;
+}
+
+function renderChrome(){
+  const t = tally();
+  const pad = n => String(n).padStart(2,"0");
+  $("#counter").innerHTML = S.view==="result"
+    ? `Resultado <span class="mode">${t.ok}/${t.total}</span>`
+    : `<b>${pad(S.pos+1)}</b> / ${pad(S.set.length)}${S.mode==="retry"?'<span class="mode">refazendo erradas</span>':''}`;
+  $("#btnFinish").textContent = S.view==="result" ? "Resultado" : "Finalizar";
+  // barra segmentada
+  const prog = $("#progress");
+  prog.innerHTML = S.set.map((id,p)=>{
+    const cls = ["seg"];
+    if(isAnswered(id)) cls.push(isRight(id)?"ok":"err");
+    if(p===S.pos && S.view==="quiz") cls.push("cur");
+    const st = !isAnswered(id)?"em branco":(isRight(id)?"certa":"errada");
+    return `<button type="button" class="${cls.join(" ")}" data-p="${p}" aria-label="Questão ${p+1}, ${st}"></button>`;
+  }).join("");
+  renderMap();
+}
+
+function renderMap(){
+  const f = S.mapFilter;
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed", String(c.dataset.f===f)));
+  const items = S.set.map((id,p)=>({id,p})).filter(({id})=>{
+    if(f==="err") return isAnswered(id) && !isRight(id);
+    if(f==="blank") return !isAnswered(id);
+    return true;
+  });
+  $("#cells").innerHTML = items.length
+    ? items.map(({id,p})=>{
+        const cls=["cell"];
+        if(isAnswered(id)) cls.push(isRight(id)?"ok":"err");
+        if(p===S.pos && S.view==="quiz") cls.push("cur");
+        return `<button type="button" class="${cls.join(" ")}" data-p="${p}">${String(p+1).padStart(2,"0")}</button>`;
+      }).join("")
+    : `<div class="map-empty" style="grid-column:1/-1">${f==="err"?"Nenhuma questão errada.":"Nenhuma questão em branco."}</div>`;
+}
+
+function renderQuiz(){
+  const id = S.set[S.pos];
+  const q = QUESTIONS[id];
+  const ans = isAnswered(id) ? S.answers[id] : null;
+  const done = ans!==null;
+  const last = S.pos===S.set.length-1;
+
+  const opts = q.opcoes.map((txt,i)=>{
+    let cls="opt";
+    if(done){
+      if(i===q.correta) cls+=" right";
+      else if(i===ans) cls+=" wrong";
+      else cls+=" dim";
+    }
+    return `<button type="button" class="${cls}" data-i="${i}" ${done?"disabled":""}><span class="key">${LETTERS[i]}</span><span>${txt}</span></button>`;
+  }).join("");
+
+  let fb="";
+  if(done){
+    const ok = ans===q.correta;
+    const alts = Object.keys(q.erros).map(Number).sort((a,b)=>a-b)
+      .map(i=>`<li><span class="k">${LETTERS[i]}</span><span>${q.erros[i]}</span></li>`).join("");
+    fb = `<div class="fb ${ok?"is-ok":"is-err"}" role="status">
+      <div class="fb-head"><span class="dot"></span>${ok?"Resposta correta":"Resposta incorreta"}<span class="gab">Gabarito: ${LETTERS[q.correta]}</span></div>
+      <div class="fb-body">
+        ${q.pista?`<div class="fb-sec"><h3>Pista do caso</h3><p>${q.pista}</p></div>`:""}
+        ${q.raciocinio && q.raciocinio.length?`<div class="fb-sec"><h3>Raciocínio esperado</h3><ol class="fb-steps">${q.raciocinio.map(r=>`<li>${r}</li>`).join("")}</ol></div>`:""}
+        ${q.conceito?`<div class="fb-sec"><h3>Conceito testado</h3><p>${q.conceito}</p></div>`:""}
+        ${q.explicacao?`<div class="fb-sec"><h3>Explicação</h3><p>${q.explicacao}</p></div>`:""}
+        ${alts?`<div class="fb-sec"><h3>Análise das alternativas</h3><ul class="fb-alts">${alts}</ul></div>`:""}
+      </div></div>`;
+  }
+
+  const cap = q.legenda ? `<figcaption>${q.legenda}</figcaption>` : "";
+  const fig = q.figura ? `<figure class="figure">${q.figura}${cap}</figure>`
+            : q.imagem ? `<figure class="figure"><img src="${q.imagem}" alt="${q.legenda||"Imagem da questão"}">${cap}</figure>` : "";
+
+  vQuiz.innerHTML = `
+    <div class="q-meta"><span class="q-num">Questão ${String(S.pos+1).padStart(2,"0")}</span></div>
+    ${q.caso?`<p class="q-case">${q.caso}</p>`:""}
+    ${fig}
+    <p class="q-ask">${q.pergunta}</p>
+    <div class="opts" role="group" aria-label="Alternativas">${opts}</div>
+    ${fb}
+    <div class="nav">
+      <button type="button" class="btn" id="bPrev" ${S.pos===0?"disabled":""}>Anterior</button>
+      <span class="spacer"></span>
+      <span class="hint">${done?"<kbd>Enter</kbd> para avançar":`<kbd>A</kbd>–<kbd>${LETTERS[q.opcoes.length-1]}</kbd> para responder`}</span>
+      <button type="button" class="btn primary" id="bNext">${last?"Ver resultado":"Próxima"}</button>
+    </div>`;
+}
+
+function renderResult(){
+  const t = tally();
+  const pct = t.total ? Math.round(t.ok/t.total*100) : 0;
+  let msg;
+  if(t.blank===t.total) msg = "Nenhuma questão foi respondida ainda.";
+  else if(pct>=80) msg = "Desempenho sólido. Revise as erradas para fechar as lacunas restantes.";
+  else if(pct>=60) msg = "Bom caminho. Refaça as erradas e releia a análise das alternativas de cada uma.";
+  else msg = "Vale revisar cada questão com calma: a pista do caso mostra onde o raciocínio deveria ancorar.";
+  const wrongCount = t.err;
+  vResult.innerHTML = `
+    <h2>${S.mode==="retry"?"Resultado — refazendo erradas":"Resultado do simulado"}</h2>
+    <div class="score">
+      <div class="pct">${pct}<small>%</small></div>
+      <div class="breakdown">
+        <div><div class="n ok">${t.ok}</div><div class="l">acertos</div></div>
+        <div><div class="n err">${t.err}</div><div class="l">erros</div></div>
+        <div><div class="n blank">${t.blank}</div><div class="l">em branco</div></div>
+      </div>
+    </div>
+    <p class="summary">${msg}</p>
+    <div class="actions">
+      <button type="button" class="btn primary" id="rReview">Revisar questões</button>
+      <button type="button" class="btn" id="rRetry" ${wrongCount?"":"disabled"}>Refazer erradas${wrongCount?` (${wrongCount})`:""}</button>
+      <button type="button" class="btn" id="rHome">Início</button>
+    </div>
+    ${topicReport()}
+    <div class="result-grid">${S.set.map((id,p)=>{
+      const cls=["cell"]; if(isAnswered(id)) cls.push(isRight(id)?"ok":"err");
+      return `<button type="button" class="${cls.join(" ")}" data-p="${p}" aria-label="Revisar questão ${p+1}">${String(p+1).padStart(2,"0")}</button>`;
+    }).join("")}</div>`;
+}
+
+function topicReport(){
+  const g={};
+  S.set.forEach(id=>{ const t=QUESTIONS[id].assunto; g[t]=g[t]||{ok:0,n:0}; g[t].n++; if(isRight(id)) g[t].ok++; });
+  const rows=Object.keys(g).map(t=>({t,ok:g[t].ok,n:g[t].n,r:g[t].ok/g[t].n}))
+    .sort((a,b)=>a.r-b.r||a.t.localeCompare(b.t,"pt-BR"));
+  const weak=rows.filter(x=>x.r<0.5).map(x=>x.t);
+  const tip = weak.length ? `Priorize a revisão de: ${weak.join(", ")}.` : "Nenhum assunto abaixo de 50% de acerto.";
+  return `<div class="topics"><h3>Desempenho por assunto</h3><p class="topics-tip">${tip}</p><ul>${rows.map(x=>{
+    const cls = x.r>=0.75?"good":(x.r>=0.5?"mid":"bad");
+    return `<li class="${cls}"><span class="tn">${x.t}</span><span class="tbar"><i style="width:${Math.round(x.r*100)}%"></i></span><span class="tv">acertou ${x.ok} de ${x.n}</span></li>`;
+  }).join("")}</ul></div>`;
+}
+
+/* =====================================================================
+   AÇÕES
+   ===================================================================== */
+function go(p){
+  if(p<0||p>=S.set.length) return;
+  S.pos=p; S.view="quiz"; closeMap(); render();
+  window.scrollTo({top:0,behavior:"auto"});
+}
+function answer(i){
+  const id=S.set[S.pos];
+  if(S.view!=="quiz"||isAnswered(id)||i<0||i>=QUESTIONS[id].opcoes.length) return;
+  S.answers[id]=i; render();
+  const fb=document.querySelector(".fb");
+  if(fb) fb.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
+}
+function next(){
+  if(S.pos<S.set.length-1) go(S.pos+1);
+  else finish();
+}
+function finish(){
+  const t=tally();
+  if(S.view==="result") return;
+  if(t.blank>0){
+    confirmBox("Finalizar simulado?", `Há ${t.blank} ${t.blank===1?"questão":"questões"} em branco. Elas serão contadas como não respondidas.`, "Finalizar", ()=>{ S.view="result"; closeMap(); render(); window.scrollTo(0,0); });
+  } else { S.view="result"; closeMap(); render(); window.scrollTo(0,0); }
+}
+function retryWrong(){
+  const wrong=S.set.filter(id=>isAnswered(id)&&!isRight(id));
+  if(!wrong.length) return;
+  wrong.forEach(id=>delete S.answers[id]);
+  S.set=wrong; S.pos=0; S.mode="retry"; S.view="quiz"; S.mapFilter="all";
+  render(); window.scrollTo(0,0);
+}
+function resetAll(){
+  confirmBox("Reiniciar simulado?", "Todas as respostas serão apagadas e o simulado volta para a questão 1.", "Reiniciar", ()=>{
+    S=freshState(); S.view="quiz"; render(); window.scrollTo(0,0);
+  });
+}
+
+/* ---------- mapa ---------- */
+const mapEl=$("#map"), mapBtn=$("#btnMap");
+function openMap(){ mapEl.hidden=false; mapBtn.setAttribute("aria-expanded","true"); renderMap(); }
+function closeMap(){ mapEl.hidden=true; mapBtn.setAttribute("aria-expanded","false"); }
+mapBtn.addEventListener("click",e=>{ e.stopPropagation(); mapEl.hidden?openMap():closeMap(); });
+mapEl.addEventListener("click",e=>{
+  e.stopPropagation();
+  const chip=e.target.closest(".chip");
+  if(chip){ S.mapFilter=chip.dataset.f; renderMap(); save(); return; }
+  const cell=e.target.closest(".cell");
+  if(cell) go(+cell.dataset.p);
+});
+document.addEventListener("click",e=>{ if(!mapEl.hidden && !mapEl.contains(e.target)) closeMap(); });
+
+/* ---------- modal ---------- */
+const modal=$("#modal"); let modalCb=null, lastFocus=null;
+function alertBox(title,text){ confirmBox(title,text,"Ok",null); $("#mCancel").hidden=true; }
+function confirmBox(title,text,okLabel,cb){
+  $("#mCancel").hidden=false;
+  $("#mTitle").textContent=title; $("#mText").textContent=text; $("#mOk").textContent=okLabel;
+  modalCb=cb; lastFocus=document.activeElement; modal.hidden=false; $("#mOk").focus();
+}
+function closeModal(run){
+  modal.hidden=true; const cb=modalCb; modalCb=null;
+  if(run&&cb) cb(); else if(lastFocus) lastFocus.focus();
+}
+$("#mOk").addEventListener("click",()=>closeModal(true));
+$("#mCancel").addEventListener("click",()=>closeModal(false));
+modal.addEventListener("click",e=>{ if(e.target===modal) closeModal(false); });
+
+/* ---------- botões fixos ---------- */
+$("#btnStart").addEventListener("click",()=>{ S.view="quiz"; render(); window.scrollTo(0,0); });
+$("#btnFresh").addEventListener("click",()=>{
+  confirmBox("Começar do zero?","As respostas salvas serão apagadas.","Começar",()=>{ S=freshState(); S.view="quiz"; render(); window.scrollTo(0,0); });
+});
+$("#btnHome").addEventListener("click",()=>{ closeMap(); S.view="start"; render(); window.scrollTo(0,0); });
+$("#btnReset").addEventListener("click",()=>{ closeMap(); resetAll(); });
+$("#btnFinish").addEventListener("click",()=>{ closeMap(); finish(); });
+$("#progress").addEventListener("click",e=>{ const b=e.target.closest(".seg"); if(b) go(+b.dataset.p); });
+
+vQuiz.addEventListener("click",e=>{
+  const o=e.target.closest(".opt"); if(o){ answer(+o.dataset.i); return; }
+  if(e.target.closest("#bPrev")) go(S.pos-1);
+  if(e.target.closest("#bNext")) next();
+});
+vResult.addEventListener("click",e=>{
+  if(e.target.closest("#rReview")) go(0);
+  else if(e.target.closest("#rRetry")) retryWrong();
+  else if(e.target.closest("#rHome")){ S.view="start"; render(); window.scrollTo(0,0); }
+  else { const c=e.target.closest(".cell"); if(c) go(+c.dataset.p); }
+});
+
+/* ---------- teclado ---------- */
+document.addEventListener("keydown",e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(!modal.hidden){
+    if(e.key==="Escape"){ e.preventDefault(); closeModal(false); }
+    return;
+  }
+  if(e.key==="Escape" && !mapEl.hidden){ closeMap(); mapBtn.focus(); return; }
+  if(S.view==="start"){
+    if(e.key==="Enter" && document.activeElement===document.body){ e.preventDefault(); $("#btnStart").click(); }
+    return;
+  }
+  if(S.view!=="quiz") return;
+  const k=e.key.toLowerCase();
+  const idx="abcde".indexOf(k);
+  if(idx>-1 && k.length===1){ e.preventDefault(); answer(idx); return; }
+  if(e.key==="Enter"){
+    const a=document.activeElement;
+    if(a && a!==document.body && a.tagName==="BUTTON" && !a.classList.contains("opt")) return; // deixa o botão focado agir
+    e.preventDefault(); next(); return;
+  }
+  if(e.key==="ArrowRight"){ e.preventDefault(); go(S.pos+1); }
+  if(e.key==="ArrowLeft"){ e.preventDefault(); go(S.pos-1); }
+});
+
+
+/* ---------- banco de questões: carregar arquivo / modelo ---------- */
+$("#btnLoad").addEventListener("click",()=>$("#fileInput").click());
+$("#fileInput").addEventListener("change",e=>{
+  const f=e.target.files && e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      const questoes = Array.isArray(d) ? d : d.questoes;
+      const cfg = Array.isArray(d) ? {} : (d.config||{});
+      const norm = normalizar(questoes);
+      localStorage.setItem(BANK_KEY, JSON.stringify({config:cfg, questoes:norm.map(q=>Object.assign({},q,{correta:LETTERS[q.correta], erros:Object.fromEntries(Object.entries(q.erros).map(([k,v])=>[LETTERS[k],v]))}))}));
+      location.reload();
+    }catch(err){
+      alertBox("Não foi possível carregar o arquivo", err instanceof SyntaxError ? "O arquivo não é um JSON válido. Confira vírgulas, aspas e colchetes." : err.message);
+    }
+    e.target.value="";
+  };
+  r.readAsText(f,"utf-8");
+});
+$("#btnDefault").addEventListener("click",()=>{
+  confirmBox("Voltar ao banco padrão?","O banco carregado de arquivo será removido deste navegador.","Voltar",()=>{
+    try{ localStorage.removeItem(BANK_KEY); }catch(e){} location.reload();
+  });
+});
+$("#btnModel").addEventListener("click",()=>{
+  const modelo={config:CONFIG, questoes:BANCO_PADRAO};
+  const blob=new Blob([JSON.stringify(modelo,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="modelo_questoes.json";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+if(ERRO_BANCO) setTimeout(()=>alertBox("Erro no banco padrão", ERRO_BANCO),0);
+
+render();
+</script>
+</body>
+</html>
